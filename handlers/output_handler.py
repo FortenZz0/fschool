@@ -163,3 +163,17 @@ async def print_subject_time_left(ns: NetSchoolAPI) -> str:
             return f"Учебный день окончен"
         
     return "НЕИЗВЕСТНАЯ ОШИБКА"
+
+
+# ВЫВОД ВРЕМЕНИ ДО КОНЦА УЧЕБНОГО ДНЯ
+async def print_day_time_left(ns: NetSchoolAPI) -> str:
+    time_left = await time_h.day_time_left(ns)
+    
+    if time_left == None:
+        return "Учебный день окончен"
+    else:
+        hours = time_left.seconds // 3600
+        minutes = (time_left.seconds - hours * 3600) // 60
+        seconds = time_left.seconds % 60
+        
+        return f"До конца учебного дня осталось:\n{hours} часов {minutes} минут {seconds} секунд"

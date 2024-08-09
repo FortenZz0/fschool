@@ -20,7 +20,7 @@ async def main():
     )
     
     
-    print(await out_h.print_subject_time_left(ns))
+    print(await out_h.print_day_time_left(ns))
     
     
     await ns.logout()

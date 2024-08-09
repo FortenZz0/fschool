@@ -50,5 +50,5 @@ async def day_time_left(ns: NetSchoolAPI) -> time | None:
     if now < end_day:
         return end_day - now
     else:
-        return time.min
+        return None
     
