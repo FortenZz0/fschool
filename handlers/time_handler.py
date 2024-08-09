@@ -11,7 +11,7 @@ from handlers import days_handler
 # 0 - сейчас перемена, либо занятия не начались. возвращается время до начала следующего урока
 # 1 - сейчас урок. возвращается время до конца текущего урока
 # 2 - день кончился, уроков больше не будет. возвращается текущее время
-async def how_many_time_left(ns: NetSchoolAPI) -> tuple[int, time, Lesson | None]:
+async def subject_time_left(ns: NetSchoolAPI) -> tuple[int, time, Lesson | None]:
     day = await days_handler.get_current_day(ns)
     
     now = datetime.now()
@@ -37,3 +37,20 @@ async def how_many_time_left(ns: NetSchoolAPI) -> tuple[int, time, Lesson | None
         # после уроков. текущее время
         elif lesson_end <= current and i == len(day.lessons) - 1:
             return 2, current.time(), None
+        
+        
+# СКОЛЬКО ВРЕМЕНИ ОСТАЛОСЬ ДО КОНЦА УЧЕБНОГО ДНЯ
+async def day_time_left(ns: NetSchoolAPI) -> time | None:
+    day = await days_handler.get_current_day(ns)
+    
+    if not day:
+        return None
+    
+    now = datetime.now()
+    end_day = datetime.combine(now.date(), day.lessons[-1].end)
+    
+    if now < end_day:
+        return end_day - now
+    else:
+        return time.min
+    
