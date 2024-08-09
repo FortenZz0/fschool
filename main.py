@@ -5,6 +5,7 @@ import asyncio
 from handlers import time_handler as time_h
 from handlers import days_handler as days_h
 from handlers import diary_handler as diary_h
+from handlers import output_handler as out_h
 
 
 
@@ -17,7 +18,9 @@ async def main():
         'МБОУ «ЦО № 34»'
     )
     
-    print(await time_h.day_time_left(ns))
+    day = await days_h.get_day(ns, date(2024, 4, 27))
+    
+    print(out_h.print_day(day, 1))
     
     await ns.logout()
     
