@@ -1,6 +1,6 @@
 from netschoolapi.schemas import Diary
 
-from handlers.output_handler import translate_subject
+from handlers import output_handler as out_h
 
 
 
@@ -13,7 +13,7 @@ def get_marks_of_diary(diary: Diary) -> dict:
                 if ass.mark == None:
                     continue
                 
-                subj = translate_subject(lesson.subject)
+                subj = out_h.translate_subject(lesson.subject)
                 
                 if subj not in list(output_marks.keys()):
                     output_marks[subj] = []

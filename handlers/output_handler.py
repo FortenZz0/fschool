@@ -6,6 +6,7 @@ import asyncio
 from handlers import time_handler as time_h
 from handlers import days_handler as days_h
 from handlers import diary_handler as diary_h
+from handlers import marks_handler as marks_h
 
 
 
@@ -26,14 +27,23 @@ SUBJECT_TRANSLATE = {
     "Иностранный язык (английский).": "Английский",
     "Иностранный язык (немецкий).": "Немецкий",
     "Вероятность и статистика": "Вер. и Стат.",
+    "Индивидуальный проект": "Инд. проект",
     "Физическая культура": "Физкультура",
     "Информатика и ИКТ": "Информатика",
     "Русский язык": "Русский"
 }
 
 
-# ВЫВОД ОДНОГО ДНЯ
-def print_day(day: Day, n: int | None = None) -> str:
+# ЗАМЕНА УРОКА НА БОЛЕЕ КОРОТКУЮ ВЕРСИЮ НАПИСАНИЯ
+def translate_subject(subj: str) -> str:
+    if subj in list(SUBJECT_TRANSLATE.keys()):
+        return SUBJECT_TRANSLATE[subj]
+    
+    return subj
+
+
+# ВЫВОД ДНЕВНИКА НА ОДИН ДЕНЬ
+def print_day_diary(day: Day, n: int | None = None) -> str:
     output = ""
     
     # -- Номер дня --
@@ -89,6 +99,23 @@ def print_diary(diary: Diary) -> str:
     output = []
     
     for i, day in enumerate(diary.schedule):
-        output.append(print_day(day, i+1))
+        output.append(print_day_diary(day, i+1))
         
     return "\n\n".join(output)
+
+
+# ВЫВОД ОЦЕНОК ЗА ДЕНЬ
+def print_diary_marks(diary: Diary) -> str:
+    if len(diary.schedule) > 1:
+        header = f"Оценки за {diary.start}"
+    else:
+        header = f"Оценки за период с {diary.start} по {diary.end}"
+    
+    output = [header]
+    
+    marks = marks_h.get_marks_of_diary(diary)
+    
+    for k, v in marks.items():
+        output.append(f"* {k} ({len(v)}): {v} - {sum(v) / len(v):.2}")
+    
+    return "\n".join(output)

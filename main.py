@@ -6,6 +6,7 @@ from handlers import time_handler as time_h
 from handlers import days_handler as days_h
 from handlers import diary_handler as diary_h
 from handlers import output_handler as out_h
+from handlers import marks_handler as marks_h
 
 
 
@@ -20,7 +21,9 @@ async def main():
     
     diary = await diary_h.get_diary(ns, date(2024, 4, 22), date(2024, 4, 27))
     
-    print(out_h.print_diary(diary))
+    # print(out_h.print_diary(diary))
+    print(out_h.print_diary_marks(diary))
+    
     
     await ns.logout()
     
