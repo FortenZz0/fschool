@@ -6,18 +6,23 @@ import json
 
 
 TODAY = date.today()
+# TODAY = date(2024, 5, 20)
 
 
 # ПОЛУЧИТЬ ДЕНЬ ПО ДАТЕ
-async def get_day(ns: NetSchoolAPI, day_date: date) -> Day:
+async def get_day(ns: NetSchoolAPI, day_date: date) -> Day | None:
     today_diary = await ns.diary(start=day_date, end=day_date)
+    
+    if not today_diary.schedule:
+        return None
+    
     day = today_diary.schedule[0]
     
     return day
 
 
 # ПОЛУЧИТЬ ТЕКУЩИЙ ДЕНЬ
-async def get_current_day(ns: NetSchoolAPI) -> Day:    
+async def get_current_day(ns: NetSchoolAPI) -> Day | None:    
     day = await get_day(ns, TODAY)
     
     return day

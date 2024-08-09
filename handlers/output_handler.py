@@ -1,4 +1,4 @@
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from netschoolapi import NetSchoolAPI
 from netschoolapi.schemas import Diary, Day, Lesson
 import asyncio
@@ -7,7 +7,6 @@ from handlers import time_handler as time_h
 from handlers import days_handler as days_h
 from handlers import diary_handler as diary_h
 from handlers import marks_handler as marks_h
-
 
 
 WEEKDAYS = [
@@ -148,3 +147,19 @@ def print_duty_of_diary(diary: Diary) -> str:
     return "\n".join(output).strip()
 
 
+# ВЫВОД ВРЕМЕНИ ДО КОНЦА УРОКА/ПЕРЕМЕНЫ
+async def print_subject_time_left(ns: NetSchoolAPI) -> str:
+    time_left = await time_h.subject_time_left(ns)
+    
+    if not time_left:
+        return "Сегодня выходной или каникулы"
+    
+    match time_left[0]:
+        case 0:
+            return f"Урок КОНЧИТСЯ через {time_left[1].seconds // 60} минут"
+        case 1:
+            return f"Урок НАЧНЁТСЯ через {time_left[1].seconds // 60} минут"
+        case 2:
+            return f"Учебный день окончен"
+        
+    return "НЕИЗВЕСТНАЯ ОШИБКА"

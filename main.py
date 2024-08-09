@@ -19,10 +19,8 @@ async def main():
         'МБОУ «ЦО № 34»'
     )
     
-    diary = await diary_h.get_diary(ns, date(2024, 5, 29), date(2024, 5, 30))
-        
-    # print(out_h.print_diary(diary))
-    print(out_h.print_duty_of_diary(diary))
+    
+    print(await out_h.print_subject_time_left(ns))
     
     
     await ns.logout()
