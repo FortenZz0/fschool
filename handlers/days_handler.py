@@ -95,51 +95,6 @@ def get_add_cycle(cycle_type: str, add: int) -> tuple[str, date, date]:
     
 
 
-# ПОЛУЧИТЬ ДНЕВНИК ЧЕТВЕРТИ/ТРИМЕСТРА ПО ДАТЕ
-# cycle_type = "quarters" | "trimesters"
-async def get_cycle_diary_by_date(ns: NetSchoolAPI, cycle_type: str, target_date: date) -> Diary:
-    cycle = get_cycle_by_date(cycle_type, target_date)
-    
-    if not cycle:
-        return None
-    
-    _, start, end = cycle
-    
-    diary = await ns.diary(start=start, end=end)
-    
-    return diary
-
-
-# ПОЛУЧИТЬ ДНЕВНИК ЧЕТВЕРТИ/ТРИМЕСТРА ПО НОМЕРУ
-# cycle_type = "quarters" | "trimesters"
-async def get_cycle_diary_by_n(ns: NetSchoolAPI, cycle_type: str, n: int) -> Diary:
-    cycle = get_cycle_by_n(cycle_type, n)
-    
-    if not cycle:
-        return None
-    
-    _, start, end = cycle
-    
-    diary = await ns.diary(start=start, end=end)
-    
-    return diary
-
-
-# ПОЛУЧИТЬ ДНЕВНИК ТЕКУЩЕЙ ЧЕТВЕРТИ/ТРИМЕСТРА
-# cycle_type = "quarters" | "trimesters"
-async def get_cycle_diary_by_n(ns: NetSchoolAPI, cycle_type: str) -> Diary | None:
-    cycle = get_cycle_by_date(cycle_type, TODAY)
-    
-    if not cycle:
-        return None
-    
-    _, start, end = cycle
-    
-    diary = await ns.diary(start=start, end=end)
-    
-    return diary
-
-
 # ПОЛУЧИТЬ КОЛИЧЕСТВО ДНЕЙ ДО КОНЦА ТЕКУЩЕЙ ЧЕТВЕРТИ/ТРИМЕСТРА/КАНИКУЛ
 # 0 - дней до конца каникул
 # 1 - дней до конца четверти/триместра
