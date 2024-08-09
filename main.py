@@ -18,9 +18,9 @@ async def main():
         'МБОУ «ЦО № 34»'
     )
     
-    day = await days_h.get_day(ns, date(2024, 4, 27))
+    diary = await diary_h.get_diary(ns, date(2024, 4, 22), date(2024, 4, 27))
     
-    print(out_h.print_day(day, 1))
+    print(out_h.print_diary(diary))
     
     await ns.logout()
     

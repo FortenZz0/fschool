@@ -20,8 +20,15 @@ WEEKDAYS = [
 ]
 
 SUBJECT_TRANSLATE = {
+    "Элективный курс \"Методология решения задач по физике\"": "Физика ЭЛЕКТИВ",
     "Алгебра и начала математического анализа": "Алгебра",
-    "Физическая культура": "Физкультура"
+    "Основы безопасности жизнедеятельности": "ОБЖ",
+    "Иностранный язык (английский).": "Английский",
+    "Иностранный язык (немецкий).": "Немецкий",
+    "Вероятность и статистика": "Вер. и Стат.",
+    "Физическая культура": "Физкультура",
+    "Информатика и ИКТ": "Информатика",
+    "Русский язык": "Русский"
 }
 
 
@@ -71,10 +78,17 @@ def print_day(day: Day, n: int | None = None) -> str:
         if marks:
             output += f" - [{', '.join(marks)}]"
             
-        if homework:
-            output += f":\n      - {homework}"
+        if homework and homework.count("-") < len(homework):
+            output += f"\n      - {homework}"
     
-        
     return output
+  
+  
+# ВЫВОД ДНЕВНИКА
+def print_diary(diary: Diary) -> str:
+    output = []
     
-    
+    for i, day in enumerate(diary.schedule):
+        output.append(print_day(day, i+1))
+        
+    return "\n\n".join(output)
