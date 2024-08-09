@@ -104,8 +104,8 @@ def print_diary(diary: Diary) -> str:
     return "\n\n".join(output)
 
 
-# ВЫВОД ОЦЕНОК ЗА ДЕНЬ
-def print_diary_marks(diary: Diary) -> str:
+# ВЫВОД ОЦЕНОК В ДНЕВНИКЕ
+def print_marks_of_diary(diary: Diary) -> str:
     if len(diary.schedule) > 1:
         header = f"Оценки за {diary.start}"
     else:
@@ -119,3 +119,32 @@ def print_diary_marks(diary: Diary) -> str:
         output.append(f"* {k} ({len(v)}): {v} - {sum(v) / len(v):.2}")
     
     return "\n".join(output)
+
+
+# ВЫВОД ПРОСРОЧЕННЫХ ЗАДАНИЙ В ДНЕВНИКЕ
+def print_duty_of_diary(diary: Diary) -> str:
+    output = ["Просроченные задания за учебный период:"]
+    
+    n = 1
+    for day in diary.schedule:
+        for lesson in day.lessons:
+            for ass in lesson.assignments:
+                
+                if not ass.is_duty:
+                    continue
+                
+                subj = translate_subject(lesson.subject)
+                
+                output.append(f"\n{n}. {subj} ({ass.type})")
+                output.append(f"   - Задание: {ass.content}")
+                output.append(f"   - Получено: {lesson.day}")
+                output.append(f"   - Выполнить до: {ass.deadline}")
+                
+                n += 1
+                
+    if len(output) == 1:
+        output.append("-- ОТСУТСТВУЮТ --")
+                
+    return "\n".join(output).strip()
+
+
