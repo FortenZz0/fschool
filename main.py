@@ -2,7 +2,7 @@ from datetime import datetime, date, time
 from netschoolapi import NetSchoolAPI
 import asyncio
 
-from handlers import time_handler
+from handlers import time_handler, days_handler
 
 
 
@@ -15,7 +15,7 @@ async def main():
         'МБОУ «ЦО № 34»'
     )
     
-    print(await time_handler.how_many_time_left(ns))
+    print(days_handler.get_current_cycle("quarters"))
     
     await ns.logout()
     
