@@ -5,7 +5,7 @@ import asyncio
 
 
 async def get_day(ns: NetSchoolAPI, day_date: date) -> Day:
-    today_diary = await ns.diary(start=date, end=date)
+    today_diary = await ns.diary(start=day_date, end=day_date)
     day = today_diary.schedule[0]
     
     return day
