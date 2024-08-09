@@ -3,7 +3,7 @@ from netschoolapi import NetSchoolAPI
 from netschoolapi.schemas import Lesson
 import asyncio
 
-from handlers import days_handler
+from handlers import days_handler as dh
 
 
 
@@ -12,7 +12,7 @@ from handlers import days_handler
 # 1 - сейчас урок. возвращается время до конца текущего урока
 # 2 - день кончился, уроков больше не будет. возвращается текущее время
 async def subject_time_left(ns: NetSchoolAPI) -> tuple[int, time, Lesson | None]:
-    day = await days_handler.get_current_day(ns)
+    day = await dh.get_current_day(ns)
     
     now = datetime.now()
     
@@ -41,7 +41,7 @@ async def subject_time_left(ns: NetSchoolAPI) -> tuple[int, time, Lesson | None]
         
 # СКОЛЬКО ВРЕМЕНИ ОСТАЛОСЬ ДО КОНЦА УЧЕБНОГО ДНЯ
 async def day_time_left(ns: NetSchoolAPI) -> time | None:
-    day = await days_handler.get_current_day(ns)
+    day = await dh.get_current_day(ns)
     
     if not day:
         return None

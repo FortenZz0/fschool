@@ -3,14 +3,14 @@ from netschoolapi import NetSchoolAPI
 from netschoolapi.schemas import Lesson, Day, Diary
 import asyncio
 
-from handlers import days_handler
+from handlers import days_handler as dh
 
 
 
 # ПОЛУЧИТЬ ДНЕВНИК ЧЕТВЕРТИ/ТРИМЕСТРА ПО ДАТЕ
 # cycle_type = "quarters" | "trimesters"
 async def get_cycle_diary_by_date(ns: NetSchoolAPI, cycle_type: str, target_date: date) -> Diary:
-    cycle = days_handler.get_cycle_by_date(cycle_type, target_date)
+    cycle = dh.get_cycle_by_date(cycle_type, target_date)
     
     if not cycle:
         return None
@@ -25,7 +25,7 @@ async def get_cycle_diary_by_date(ns: NetSchoolAPI, cycle_type: str, target_date
 # ПОЛУЧИТЬ ДНЕВНИК ЧЕТВЕРТИ/ТРИМЕСТРА ПО НОМЕРУ
 # cycle_type = "quarters" | "trimesters"
 async def get_cycle_diary_by_n(ns: NetSchoolAPI, cycle_type: str, n: int) -> Diary:
-    cycle = days_handler.get_cycle_by_n(cycle_type, n)
+    cycle = dh.get_cycle_by_n(cycle_type, n)
     
     if not cycle:
         return None
@@ -40,7 +40,7 @@ async def get_cycle_diary_by_n(ns: NetSchoolAPI, cycle_type: str, n: int) -> Dia
 # ПОЛУЧИТЬ ДНЕВНИК ТЕКУЩЕЙ ЧЕТВЕРТИ/ТРИМЕСТРА
 # cycle_type = "quarters" | "trimesters"
 async def get_cycle_diary_by_n(ns: NetSchoolAPI, cycle_type: str) -> Diary | None:
-    cycle = days_handler.get_cycle_by_date(cycle_type, days_handler.TODAY)
+    cycle = dh.get_cycle_by_date(cycle_type, dh.TODAY)
     
     if not cycle:
         return None
