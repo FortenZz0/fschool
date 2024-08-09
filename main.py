@@ -15,7 +15,7 @@ async def main():
         'МБОУ «ЦО № 34»'
     )
     
-    print(days_handler.get_current_cycle("quarters"))
+    print(days_handler.get_cycle_days_left("quarters"))
     
     await ns.logout()
     
