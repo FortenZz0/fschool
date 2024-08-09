@@ -15,7 +15,7 @@ async def main():
         'МБОУ «ЦО № 34»'
     )
     
-    print(await time_handler.how_many_time(ns))
+    print(await time_handler.how_many_time_left(ns))
     
     await ns.logout()
     
