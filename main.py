@@ -1,15 +1,16 @@
-from datetime import datetime, date, time
-from netschoolapi import NetSchoolAPI
 import asyncio
+import logging
 
 from dotenv import find_dotenv, load_dotenv
 from os import getenv
 
-from handlers import time_handler as time_h
-from handlers import days_handler as days_h
-from handlers import diary_handler as diary_h
-from handlers import output_handler as out_h
-from handlers import marks_handler as marks_h
+from aiogram import Bot, Dispatcher
+from aiogram.enums.parse_mode import ParseMode
+from aiogram.client.default import DefaultBotProperties
+from aiogram.fsm.storage.memory import MemoryStorage
+
+from handlers.router import router
+
 
 
 denv = find_dotenv()
@@ -17,20 +18,16 @@ load_dotenv(denv)
 
 
 async def main():
-    ns = NetSchoolAPI(getenv("MY_URL"))
+    bot = Bot(token=getenv("BOT_TOKEN"), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     
-    await ns.login(
-        getenv("MY_LOGIN"),
-        getenv("MY_PASS"),
-        getenv("MY_SCHOOLE_NAME")
-    )
+    dp = Dispatcher(storage=MemoryStorage())
+    dp.include_router(router)
     
-    print(await out_h.print_school_info(ns))
-    
-    
-    await ns.logout()
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     
     
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
 
