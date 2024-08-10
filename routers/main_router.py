@@ -268,7 +268,7 @@ async def diary_process(msg: Message, state: FSMContext):
         
         if not today:
             await msg.answer(
-                "❌ Не удалось подключиться к электронному дневнику!",
+                "❌ Сегодня уроков не было!",
                 reply_markup=get_keyboard(msg.from_user.username)
             )
             return
@@ -280,7 +280,7 @@ async def diary_process(msg: Message, state: FSMContext):
         
         if not next_day:
             await msg.answer(
-                "❌ Не удалось подключиться к электронному дневнику!",
+                "❌ Завтра уроков не будет!",
                 reply_markup=get_keyboard(msg.from_user.username)
             )
             return
@@ -299,10 +299,19 @@ async def diary_process(msg: Message, state: FSMContext):
     
     output = out_h.print_diary(diary)
     
+    if not output:
+        await msg.answer(
+            "❌ Расписание отсутствует!",
+            reply_markup=get_keyboard(msg.from_user.username)
+        )
+        return
+    
     await msg.answer(
         output,
         reply_markup=get_keyboard(msg.from_user.username)
     )
+    
+    await state.clear()
         
     await ns.logout()
         
