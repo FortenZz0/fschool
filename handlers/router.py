@@ -4,7 +4,6 @@ from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
-from datetime import datetime, date, time
 from netschoolapi import NetSchoolAPI
 
 import sqlite3
@@ -16,8 +15,14 @@ from handlers import output_handler as out_h
 from handlers import marks_handler as marks_h
 
 
+
 BUTTONS = {
-    "login": "Войти в аккаунт 🔐"
+    "login": "Войти в аккаунт 🔐",
+    "diary": "Расписание 🗓",
+    "marks": "Оценки 🥇",
+    "time": "Время до... ⏰",
+    "school": "О школе 🏫",
+    "duty": "Просроченные задания 😎"
 }
 
 
@@ -31,6 +36,14 @@ db_cur = db_con.cursor()
 
 class Form(StatesGroup):
     input_login_info = State()
+
+
+
+class Using(StatesGroup):
+    get_diary = State()
+    get_marks = State()
+    get_time = State()
+    get_duty = State()
 
 
 
@@ -85,8 +98,15 @@ def get_keyboard(tg_us: str) -> types.ReplyKeyboardMarkup:
     if check_login(tg_us):
         kb = [
             [
-                types.KeyboardButton(text="Кнопка 1"),
-                types.KeyboardButton(text="Кнопка 2")
+                types.KeyboardButton(text=BUTTONS["diary"]),
+                types.KeyboardButton(text=BUTTONS["marks"])
+            ],
+            [
+                types.KeyboardButton(text=BUTTONS["time"]),
+                types.KeyboardButton(text=BUTTONS["school"])
+            ],
+            [
+                types.KeyboardButton(text=BUTTONS["duty"])
             ]
         ]
     else:
