@@ -7,6 +7,8 @@ from aiogram.fsm.context import FSMContext
 from datetime import datetime, date, time
 from netschoolapi import NetSchoolAPI
 
+import sqlite3
+
 from handlers import time_handler as time_h
 from handlers import days_handler as days_h
 from handlers import diary_handler as diary_h
@@ -14,9 +16,16 @@ from handlers import output_handler as out_h
 from handlers import marks_handler as marks_h
 
 
+BUTTONS = {
+    "login": "Войти в аккаунт 🔐"
+}
+
 
 router = Router()
 
+
+db_con = sqlite3.connect("data.db")
+db_cur = db_con.cursor()
 
 
 
@@ -26,10 +35,15 @@ class Form(StatesGroup):
 
 
 def check_login(tg_us: str) -> bool:
-    return False
+    res = db_cur.execute(f"SELECT tg_us FROM users WHERE tg_us='{tg_us}'")
+    
+    return bool(res.fetchone())
 
 
 async def login(tg_us: str, url: str, lg: str, password: str, school_name: str) -> bool:
+    if check_login(tg_us):
+        return True
+    
     success = False
     
     ns = NetSchoolAPI(url)
@@ -50,7 +64,12 @@ async def login(tg_us: str, url: str, lg: str, password: str, school_name: str) 
         return False
     
     if success and ns:
+        values = [
+            (tg_us, url, lg, password, school_name)
+        ]
         
+        db_cur.executemany(f"INSERT INTO users VALUES(?, ?, ?, ?, ?)", values)
+        db_con.commit()
         
         await ns.logout()
         return True
@@ -58,7 +77,7 @@ async def login(tg_us: str, url: str, lg: str, password: str, school_name: str) 
     return False
         
 
-def get_keyboard(tg_us: str) -> tuple[types.ReplyKeyboardMarkup, str, bool]:
+def get_keyboard(tg_us: str) -> types.ReplyKeyboardMarkup:
     kb = []
     placeholder = "Выберите команду"
     one_click = False
@@ -72,35 +91,46 @@ def get_keyboard(tg_us: str) -> tuple[types.ReplyKeyboardMarkup, str, bool]:
         ]
     else:
         kb = [[
-                types.KeyboardButton(text="Войти в аккаунт 🔐"),
+                types.KeyboardButton(text=BUTTONS["login"]),
         ]]
         
         placeholder = "Необходимо войти в аккаунт"
         one_click = True
         
-    return kb, placeholder, one_click
-
-
-
-@router.message(Command("start"))
-async def start_handler(msg: Message):
-    kb, placeholder, one_click = get_keyboard(msg.from_user.username)
-    
     keyboard = types.ReplyKeyboardMarkup(
         keyboard=kb,
         resize_keyboard=True,
         input_field_placeholder=placeholder,
         one_time_keyboard=one_click
     )
+        
+    return keyboard
+
+
+
+@router.message(Command("start"))
+async def start_handler(msg: Message):
+    keyboard = get_keyboard(msg.from_user.username)
     
-    await msg.answer("Hello world!", reply_markup=keyboard)
+    await msg.answer(
+"Приветствую! 👋\nFSchool - это универсальный помощник для взаимодействия с электронными дневниками. \
+В нём собраны различные полезные функции, к которым все пользователи имеют мгновенный доступ!\n\n\
+Из плюсов:\n\
+  ✅ Не нужно входить в аккаунт КАЖДЫЕ 5 МИНУТ (что не скажешь о большинстве эл. дневников)\n\
+  ✅ БЫСТРЫЙ и БЕСПЛАТНЫЙ доступ ко всему функционалу сразу после входа в аккаунт\n\
+  ✅ Широкий список полезных функций, которых нет ни в одном электронном дневнике",
+        reply_markup=keyboard
+    )
+    
+    if not check_login(msg.from_user.username):
+        await msg.answer(f"Для входа в аккаунт своего электронного дневника используй кнопку \"{BUTTONS['login']}")
 
 
 
-@router.message(F.text.lower() == "войти в аккаунт 🔐")
+@router.message(F.text.lower() == BUTTONS["login"].lower())
 async def login_handler(msg: Message, state: FSMContext):
     await msg.answer(
-        f"Отправьте одним сообщением следующие данные для входа в аккаунт сетевого дневника (без скобок):\n\
+f"Отправьте одним сообщением следующие данные для входа в аккаунт сетевого дневника (без скобок):\n\
   [САЙТ ДНЕВНИКА]\n\
   [ВАШ ЛОГИН]\n\
   [ВАШ ПАРОЛЬ]\n\
@@ -119,7 +149,7 @@ async def login_handler(msg: Message, state: FSMContext):
 
 
 @router.message(Form.input_login_info)
-async def login_handler(msg: Message, state: FSMContext):
+async def login_process(msg: Message, state: FSMContext):
     info = msg.text.split("\n")
     
     if not info or len(info) < 4:
@@ -132,8 +162,15 @@ async def login_handler(msg: Message, state: FSMContext):
         "Данные получены! Проверяю возможность входа в аккаунт..."
     )
     
-    if await login(msg.from_user.username, *info):
-        await repl_message.edit_text("✅ Данные корректны, вы добавлены в базу данных!")
+    tg_us = msg.from_user.username
+    
+    if await login(tg_us, *info):
+        await repl_message.delete()
+        
+        await msg.answer(
+            "✅ Данные корректны, вы добавлены в базу данных!",
+            reply_markup=get_keyboard(tg_us)
+        )
     else:
         await repl_message.edit_text("❌ Не удаётся войти в аккаунт! Проверьте корректность данных и повторите попытку")
         return
