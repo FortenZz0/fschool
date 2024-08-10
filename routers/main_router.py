@@ -1,4 +1,5 @@
 from aiogram import types, F, Router, html
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
@@ -6,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 
 from netschoolapi import NetSchoolAPI
 
+from datetime import datetime, date, timedelta
 import sqlite3
 
 from handlers import time_handler as time_h
@@ -19,10 +21,12 @@ from handlers import marks_handler as marks_h
 BUTTONS = {
     "login": "Войти в аккаунт 🔐",
     "diary": "Расписание 🗓",
-    "diary_today": "На сегодня",
-    "diary_next_day": "На завтра",
+    "diary_day": "На день",
     "diary_week": "На неделю",
     "marks": "Оценки 🥇",
+    "marks_day": "За день",
+    "marks_week": "За неделю",
+    "marks_cycle": "За учебный период",
     "time": "Время ⏰",
     "school": "О школе 🏫",
     "duty": "Просроченные задания 😎",
@@ -45,9 +49,20 @@ class Form(StatesGroup):
 class Using(StatesGroup):
     get_diary = State()
     get_marks = State()
-    get_time = State()
     get_duty = State()
+    
+class CurrentWeekDiary(StatesGroup):
+    week_diary_msg = State()
+    week_n = State()
 
+
+
+def cut_string(s: str, cut1: str, cut2: str):
+    index_1 = s.index(cut1) + len(cut1)
+    s = s[index_1:]
+    
+    index_2 = s.index(cut2)
+    return  s[:index_2]
 
 
 def check_login(tg_us: str) -> bool:
@@ -130,9 +145,10 @@ async def get_NetSchoolAPI(tg_us: str) -> NetSchoolAPI | None:
         return None
         
 
-# mode = "base" | "diary" | "marks"
+# mode = "base" | "diary" | "marks" | "inline_slider"
 def get_keyboard(tg_us: str, mode: str = "base") -> types.ReplyKeyboardMarkup:
     kb = []
+    inline_kb = []
     placeholder = "Выберите команду"
     one_click = False
     
@@ -158,21 +174,41 @@ def get_keyboard(tg_us: str, mode: str = "base") -> types.ReplyKeyboardMarkup:
             
             placeholder = "Вход в аккаунт"
             one_click = True
+            
     elif mode == "diary":
         kb = [
             [
-                types.KeyboardButton(text=BUTTONS["diary_today"]),
-                types.KeyboardButton(text=BUTTONS["diary_next_day"])
-            ],
-            [
+                types.KeyboardButton(text=BUTTONS["diary_day"]),
                 types.KeyboardButton(text=BUTTONS["diary_week"])
             ],
             [
                 types.KeyboardButton(text=BUTTONS["back"])
             ]
         ]
-    elif mode == "marks":
-        ...
+        
+    elif mode == "inline_slider":
+        kb = [
+            [
+                types.InlineKeyboardButton(
+                    text="ЗАГРУЗИТЬ",
+                    callback_data='inline_slider_load',
+                    
+                )  
+            ],
+            [
+                types.InlineKeyboardButton(
+                    text="<<<<",
+                    callback_data='inline_slider_prev'
+                ),
+                types.InlineKeyboardButton(
+                    text=">>>>",
+                    callback_data='inline_slider_next'
+                )
+            ]
+        ]
+        
+        return types.InlineKeyboardMarkup(inline_keyboard=kb)
+    
     else:
         kb = [[types.KeyboardButton(text=BUTTONS["back"])]]
     
@@ -187,18 +223,29 @@ def get_keyboard(tg_us: str, mode: str = "base") -> types.ReplyKeyboardMarkup:
     return keyboard
 
 
+def get_inline_keyboard(questions: dict) -> types.InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    # Добавляем кнопки вопросов
+    for question_id, question_data in questions.items():
+        builder.row(
+            types.InlineKeyboardButton(
+                text=question_data.get('qst'),
+                callback_data=f'qst_{question_id}'
+            )
+        )
+    # Настраиваем размер клавиатуры
+    builder.adjust(1)
+    return builder.as_markup()
+
+
 
 @router.message(Command("start"))
 async def start_handler(msg: Message):
     keyboard = get_keyboard(msg.from_user.username)
     
     await msg.answer(
-"Приветствую! 👋\nFSchool - это универсальный помощник для взаимодействия с электронными дневниками. \
-В нём собраны различные полезные функции, к которым все пользователи имеют мгновенный доступ!\n\n\
-Из плюсов:\n\
-  ✅ Не нужно входить в аккаунт КАЖДЫЕ 5 МИНУТ (что не скажешь о большинстве эл. дневников)\n\
-  ✅ БЫСТРЫЙ и БЕСПЛАТНЫЙ доступ ко всему функционалу сразу после входа в аккаунт\n\
-  ✅ Широкий список полезных функций, которых нет ни в одном электронном дневнике",
+"Приветствую! 👋\nFSchool Bot - это универсальный помощник для взаимодействия с электронными дневниками. \
+В нём собраны различные полезные функции, к которым все пользователи имеют мгновенный доступ!",
         reply_markup=keyboard
     )
     
@@ -287,78 +334,101 @@ async def diary_handler(msg: Message, state: FSMContext):
     
 @router.message(Using.get_diary)
 async def diary_process(msg: Message, state: FSMContext):
-    ns = await get_NetSchoolAPI(msg.from_user.username)
+    t = "[Расписание] "
     
-    if not ns:
-        await msg.answer(
-            "❌ Не удалось подключиться к электронному дневнику!",
-            reply_markup=get_keyboard(msg.from_user.username)
+    if msg.text.lower() == BUTTONS["diary_day"].lower():
+        diary_msg = await msg.answer(
+            t + out_h.print_unload_day_by_date(date.today()),
+            reply_markup=get_keyboard(msg.from_user.username, "inline_slider")
         )
-        await state.clear()
-        return
-    
-    diary = None
-    
-    if msg.text.lower() == BUTTONS["diary_today"].lower():
-        today = await days_h.get_current_day(ns)
-        
-        if not today:
-            await msg.answer(
-                "❌ Сегодня уроков не было!",
-                reply_markup=get_keyboard(msg.from_user.username)
-            )
-            await ns.logout()
-            await state.clear()
-            return
-        
-        diary = await diary_h.get_diary(ns, today.day, today.day)
-        
-    elif msg.text.lower() == BUTTONS["diary_next_day"].lower():
-        next_day = await days_h.get_next_day(ns)
-        
-        if not next_day:
-            await msg.answer(
-                "❌ Завтра уроков не будет!",
-                reply_markup=get_keyboard(msg.from_user.username)
-            )
-            await ns.logout()
-            await state.clear()
-            return
-        
-        diary = await diary_h.get_diary(ns, next_day.day, next_day.day)
-        
+
     elif msg.text.lower() == BUTTONS["diary_week"].lower():
-        diary = await diary_h.get_diary(ns, None, None)
+        diary_msg = await msg.answer(
+            t + out_h.print_unload_week_by_n(0),
+            reply_markup=get_keyboard(msg.from_user.username, "inline_slider")
+        )
+    
+    # await state.clear()
+
+
+@router.callback_query(F.data.in_(["inline_slider_prev", "inline_slider_next"]))
+async def inline_slider_move_handler(callback: types.CallbackQuery):
+    header = callback.message.text.split("\n\n")[0]
+    
+    t = cut_string(header, "[", "]")
+    
+    if "неделя" in header.lower():
+        if callback.data == "inline_slider_prev":
+            week_start = cut_string(header, "(", ")").split(" - ")[0]
+            week_start_date = datetime.fromisoformat(week_start)
+            
+            new_week_day = week_start_date - timedelta(days=1)
+        else:
+            week_end = cut_string(header, "(", ")").split(" - ")[1]
+            week_end_date = datetime.fromisoformat(week_end)
         
-    if not diary:
-        await msg.answer(
-            "❌ Не удалось получить расписание!",
-            reply_markup=get_keyboard(msg.from_user.username)
+            new_week_day = week_end_date + timedelta(days=1)
+        
+        await callback.message.edit_text(
+            text=f"[{t}] " + out_h.print_unload_week_by_date(new_week_day),
+            reply_markup=callback.message.reply_markup
         )
-        await ns.logout()
-        await state.clear()
-        return
-    
-    output = out_h.print_diary(diary)
-    
-    if not output:
-        await msg.answer(
-            "❌ Расписание отсутствует!",
-            reply_markup=get_keyboard(msg.from_user.username)
+        
+    elif "день" in header.lower():
+        day = datetime.fromisoformat(header.split(" ")[-1])
+        
+        if callback.data == "inline_slider_prev":
+            new_day = day - timedelta(days=1)
+        else:
+            new_day = day + timedelta(days=1)
+        
+        await callback.message.edit_text(
+            text=f"[{t}] " + out_h.print_unload_day_by_date(new_day.date()),
+            reply_markup=callback.message.reply_markup
         )
-        await ns.logout()
-        await state.clear()
-        return
     
-    await msg.answer(
-        output,
-        reply_markup=get_keyboard(msg.from_user.username)
+    
+@router.callback_query(F.data == "inline_slider_load")
+async def inline_slider_load_handler(callback: types.CallbackQuery):
+    header = callback.message.text.split("\n\n")[0]
+    
+    t = cut_string(header, "[", "]")
+    
+    output = "Не удалось подключиться к эл. дневнику!"
+    
+    ns = await get_NetSchoolAPI(callback.from_user.username)
+    
+    if ns:
+        output = "-- ПУСТО --"
+        
+        if t == "Расписание":
+            if "неделя" in header.lower():
+                week_start, week_end = cut_string(header, "(", ")").split(" - ")
+                
+                start_date = date.fromisoformat(week_start)
+                end_date = date.fromisoformat(week_end)
+            else:
+                day = datetime.fromisoformat(header.split(" ")[-1]).date()
+                
+                start_date = day
+                end_date = day
+                
+            
+            diary = await diary_h.get_diary(ns, start_date, end_date)
+            
+            if diary:
+                out = out_h.print_diary(diary)
+                
+                output = out if out else output
+    
+    await callback.message.edit_text(
+        text=header + "\n\n" + output,
+        reply_markup=get_keyboard(callback.from_user.username, "inline_slider")
     )
     
-    await state.clear()
-        
     await ns.logout()
-        
+    
+
 
 @router.message(F.text.lower() == BUTTONS["time"].lower())
 async def time_handler(msg: Message):
@@ -386,7 +456,7 @@ async def school_handler(msg: Message):
     
     if not ns:
         await msg.answer(
-            "❌ Не удалось подключиться к электронному дневнику!"
+            "❌ Не удалось подключиться к электронному дневнику!",
         )
         return
     

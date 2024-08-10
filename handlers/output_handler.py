@@ -52,7 +52,7 @@ def print_day_diary(day: Day, n: int | None = None) -> str:
         output += f"{n}. "
     
     # -- День недели --
-    weekday = WEEKDAYS[day.day.isoweekday() - 1]
+    weekday = WEEKDAYS[day.day.weekday()]
     output += weekday
     
     output = html.bold(output)
@@ -202,3 +202,21 @@ async def print_school_info(ns: NetSchoolAPI) -> str:
     ]
     
     return "\n".join(output).strip()
+
+
+# ВЫВОД НЕЗАГРУЖЕННОЙ НЕДЕЛИ
+def print_unload_week_by_n(week_n: int):
+    week_start, week_end, week_n = days_h.get_week_by_n(week_n)
+    
+    return f"Неделя {week_n} - {html.italic(f'({week_start} - {week_end})')}"
+
+
+# ВЫВОД НЕЗАГРУЖЕННОЙ НЕДЕЛИ
+def print_unload_week_by_date(day: date):
+    week_start, week_end, week_n = days_h.get_week_by_date(day)
+    
+    return f"Неделя {week_n} - {html.italic(f'({week_start} - {week_end})')}"
+
+
+def print_unload_day_by_date(day: date):
+    return f"День {day.isoformat()}"

@@ -124,4 +124,40 @@ def get_cycle_days_left(cycle_type: str) -> tuple[int, int]:
     
     return end - date.today(), t
     
+
+# ПОЛУЧИТЬ ДАТЫ НАЧАЛА И КОНЦА НЕДЕЛИ ПО НОМЕРУ
+def get_week_by_n(n: int, last_year: int | None = None) -> tuple[date, date, int]:
+    now = datetime.now().isocalendar()
     
+    root_n = now.week
+    
+    l_year = last_year if last_year != None else now.year
+    
+    week_n = root_n + n
+    year = now.year + week_n // 52
+    
+    week_n %= 52
+    if week_n == 0:
+        if year - l_year == 1:
+            week_n = 1
+        else:
+            week_n = 52
+    
+    week_start = datetime.fromisocalendar(year, week_n, 1)
+    week_end = datetime.fromisocalendar(year, week_n, 7)
+    
+    return week_start.date(), week_end.date(), week_n
+
+
+# ПОЛУЧИТЬ ДАТЫ НАЧАЛА И КОНЦА НЕДЕЛИ ПО ДАТЕ
+def get_week_by_date(day: date) -> tuple[date, date, int]:
+    week = datetime.fromisocalendar(
+        day.isocalendar().year,
+        day.isocalendar().week,
+        day.isocalendar().weekday
+    ).isocalendar()
+    
+    week_start = datetime.fromisocalendar(week.year, week.week, 1)
+    week_end = datetime.fromisocalendar(week.year, week.week, 7)
+    
+    return week_start.date(), week_end.date(), week.week
