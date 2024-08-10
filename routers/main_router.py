@@ -88,6 +88,22 @@ async def login(tg_us: str, url: str, lg: str, password: str, school_name: str) 
         return True
         
     return False
+
+
+async def get_NetSchoolAPI(tg_us: str) -> NetSchoolAPI | None:
+    data = db_cur.execute(f"SELECT url, login, pass, school_name FROM users WHERE tg_us='{tg_us}'").fetchone()
+    
+    if not data:
+        return None
+    
+    ns = NetSchoolAPI(data[0])
+    
+    try:
+        await ns.login(*data[1:])
+        
+        return ns
+    except:
+        return None
         
 
 def get_keyboard(tg_us: str) -> types.ReplyKeyboardMarkup:
@@ -196,3 +212,21 @@ async def login_process(msg: Message, state: FSMContext):
         return
     
     await state.clear()
+    
+    
+    
+
+
+@router.message(F.text.lower() == BUTTONS["school"].lower())
+async def school_handler(msg: Message):
+    ns = await get_NetSchoolAPI(msg.from_user.username)
+    
+    if not ns:
+        await msg.answer(
+            "❌ Не удалось подключиться к электронному дневнику!"
+        )
+        
+        return
+    
+    info = await out_h.print_school_info(ns)
+    await msg.answer(info)
