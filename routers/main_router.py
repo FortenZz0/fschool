@@ -56,7 +56,12 @@ def check_login(tg_us: str) -> bool:
     return bool(res.fetchone())
 
 
-async def login(tg_us: str, url: str, lg: str, password: str, school_name: str) -> bool:
+async def login(tg_us: str,
+                url: str,
+                lg: str,
+                password:str,
+                school_name: str,
+                cycle_type: str) -> bool:
     if check_login(tg_us):
         return True
     
@@ -80,17 +85,33 @@ async def login(tg_us: str, url: str, lg: str, password: str, school_name: str) 
         return False
     
     if success and ns:
+        cycle_type = cycle_type.lower().replace(
+            "ч", "quarters"
+        ).replace(
+            "т",
+            "trimesters"
+        ).replace(
+            "п",
+            "half"
+        )
+        
         values = [
-            (tg_us, url, lg, password, school_name)
+            (tg_us, url, lg, password, school_name, cycle_type)
         ]
         
-        db_cur.executemany(f"INSERT INTO users VALUES(?, ?, ?, ?, ?)", values)
+        db_cur.executemany(f"INSERT INTO users VALUES(?, ?, ?, ?, ?, ?)", values)
         db_con.commit()
         
         await ns.logout()
         return True
         
     return False
+
+
+def get_current_cycle_type(tg_us: str) -> str:
+    cycle_type = db_cur.execute(f"SELECT cycle FROM users WHERE tg_us='{tg_us}'").fetchone()
+    
+    return cycle_type
 
 
 async def get_NetSchoolAPI(tg_us: str) -> NetSchoolAPI | None:
@@ -193,14 +214,16 @@ f"Отправьте одним сообщением следующие данн
   [САЙТ ДНЕВНИКА]\n\
   [ВАШ ЛОГИН]\n\
   [ВАШ ПАРОЛЬ]\n\
-  [НАЗВАНИЕ ШКОЛЫ]\n\n\
+  [НАЗВАНИЕ ШКОЛЫ]\n\
+  [УЧЕБНЫЙ ПЕРИОД (Ч|Т|П)]\n\n\
 Подсказка, где брать эти данные:\n\
 - Сайт дневника: ссылка на эл. дневник (https://####.ru)\n\
       Либо воспользуйтесь {html.link('Списком инстансов СГО', 'https://web.archive.org/web/20221204181741/https://sg-o.ru/')}\n\
       (некоторые ссылки устарели)\n\
 - Ваш логин: в настройках аккаунта эл. дневника\n\
 - Ваш пароль: в настройках аккаунта эл. дневника\n\
-- Название школы: в информации о школе в эл. дневнике"
+- Название школы: в информации о школе в эл. дневнике\n\
+- Учебный период: Ч - Четверти, Т - Триместры, П - Полугодия"
     )
     
     await state.set_state(Form.input_login_info)
@@ -211,7 +234,8 @@ f"Отправьте одним сообщением следующие данн
 async def login_process(msg: Message, state: FSMContext):
     info = msg.text.split("\n")
     
-    if not info or len(info) < 4:
+    # чтп: четверти, триместры, полугодия
+    if not info or len(info) < 5 or info[4].lower() not in "чтп":
         await msg.answer("❌ Получены некорректные данные! Убедитесь в правильности ввода и повторите попытку")
         await state.set_state(Form.input_login_info)
         
@@ -222,8 +246,9 @@ async def login_process(msg: Message, state: FSMContext):
     )
     
     tg_us = msg.from_user.username
+    url, lg, password, school_name, cycle_type = info
     
-    if await login(tg_us, *info):
+    if await login(tg_us, url, lg, password, school_name, cycle_type):
         await repl_message.delete()
         
         await msg.answer(
@@ -269,6 +294,7 @@ async def diary_process(msg: Message, state: FSMContext):
             "❌ Не удалось подключиться к электронному дневнику!",
             reply_markup=get_keyboard(msg.from_user.username)
         )
+        await state.clear()
         return
     
     diary = None
@@ -281,6 +307,8 @@ async def diary_process(msg: Message, state: FSMContext):
                 "❌ Сегодня уроков не было!",
                 reply_markup=get_keyboard(msg.from_user.username)
             )
+            await ns.logout()
+            await state.clear()
             return
         
         diary = await diary_h.get_diary(ns, today.day, today.day)
@@ -293,6 +321,8 @@ async def diary_process(msg: Message, state: FSMContext):
                 "❌ Завтра уроков не будет!",
                 reply_markup=get_keyboard(msg.from_user.username)
             )
+            await ns.logout()
+            await state.clear()
             return
         
         diary = await diary_h.get_diary(ns, next_day.day, next_day.day)
@@ -305,6 +335,8 @@ async def diary_process(msg: Message, state: FSMContext):
             "❌ Не удалось получить расписание!",
             reply_markup=get_keyboard(msg.from_user.username)
         )
+        await ns.logout()
+        await state.clear()
         return
     
     output = out_h.print_diary(diary)
@@ -314,6 +346,8 @@ async def diary_process(msg: Message, state: FSMContext):
             "❌ Расписание отсутствует!",
             reply_markup=get_keyboard(msg.from_user.username)
         )
+        await ns.logout()
+        await state.clear()
         return
     
     await msg.answer(
