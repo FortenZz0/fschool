@@ -109,12 +109,7 @@ def print_diary(diary: Diary) -> str:
 
 # ВЫВОД ОЦЕНОК В ДНЕВНИКЕ
 def print_marks_of_diary(diary: Diary) -> str:
-    if len(diary.schedule) > 1:
-        header = f"Оценки за {diary.start}"
-    else:
-        header = f"Оценки за период с {diary.start} по {diary.end}"
-    
-    output = [header]
+    output = []
     
     marks = marks_h.get_marks_of_diary(diary)
     
@@ -220,3 +215,9 @@ def print_unload_week_by_date(day: date):
 
 def print_unload_day_by_date(day: date):
     return f"День {day.isoformat()}"
+
+
+def print_unload_cycle_by_date(cycle_type: str, day: date):
+    cycle = days_h.get_cycle_by_date(cycle_type, day)
+    
+    return f"Учебный период: {cycle[0]} {html.italic(f'({cycle[1]} - {cycle[2]})')}"

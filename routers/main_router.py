@@ -209,6 +209,20 @@ def get_keyboard(tg_us: str, mode: str = "base") -> types.ReplyKeyboardMarkup:
         
         return types.InlineKeyboardMarkup(inline_keyboard=kb)
     
+    elif mode == "marks":
+        kb = [
+            [
+                types.KeyboardButton(text=BUTTONS["marks_day"]),
+                types.KeyboardButton(text=BUTTONS["marks_week"])
+            ],
+            [
+                types.KeyboardButton(text=BUTTONS["marks_cycle"])
+            ],
+            [
+                types.KeyboardButton(text=BUTTONS["back"])
+            ]
+        ]
+    
     else:
         kb = [[types.KeyboardButton(text=BUTTONS["back"])]]
     
@@ -333,17 +347,17 @@ async def diary_handler(msg: Message, state: FSMContext):
     
     
 @router.message(Using.get_diary)
-async def diary_process(msg: Message, state: FSMContext):
+async def diary_process(msg: Message):
     t = "[Расписание] "
     
     if msg.text.lower() == BUTTONS["diary_day"].lower():
-        diary_msg = await msg.answer(
+        await msg.answer(
             t + out_h.print_unload_day_by_date(date.today()),
             reply_markup=get_keyboard(msg.from_user.username, "inline_slider")
         )
 
     elif msg.text.lower() == BUTTONS["diary_week"].lower():
-        diary_msg = await msg.answer(
+        await msg.answer(
             t + out_h.print_unload_week_by_n(0),
             reply_markup=get_keyboard(msg.from_user.username, "inline_slider")
         )
@@ -386,6 +400,34 @@ async def inline_slider_move_handler(callback: types.CallbackQuery):
             text=f"[{t}] " + out_h.print_unload_day_by_date(new_day.date()),
             reply_markup=callback.message.reply_markup
         )
+        
+    elif "учебный период" in header.lower():
+        current_cycle_type = get_current_cycle_type(callback.from_user.username)[0]
+        
+        cycle_name = cut_string(header, ": ", " (")
+        cycles = days_h.get_schooldays()[current_cycle_type]
+        
+        for i, cycle in enumerate(cycles):
+            if cycle_name != cycle["name"]:
+                continue
+                
+            if callback.data == "inline_slider_prev":
+                new_i = i - 1
+            else:
+                new_i = i + 1
+                
+            if new_i >= len(cycles):
+                new_i = 0
+            elif new_i < 0:
+                new_i = len(cycles) - 1
+                
+            await callback.message.edit_text(
+                text=f"[{t}] " + out_h.print_unload_cycle_by_date(
+                    current_cycle_type,
+                    date.fromisoformat(cycles[new_i]["start"])
+                ),
+                reply_markup=callback.message.reply_markup
+            )
     
     
 @router.callback_query(F.data == "inline_slider_load")
@@ -401,25 +443,34 @@ async def inline_slider_load_handler(callback: types.CallbackQuery):
     if ns:
         output = "-- ПУСТО --"
         
-        if t == "Расписание":
-            if "неделя" in header.lower():
-                week_start, week_end = cut_string(header, "(", ")").split(" - ")
-                
-                start_date = date.fromisoformat(week_start)
-                end_date = date.fromisoformat(week_end)
-            else:
-                day = datetime.fromisoformat(header.split(" ")[-1]).date()
-                
-                start_date = day
-                end_date = day
-                
+        if "неделя" in header.lower() or "учебный период" in header.lower():
+            week_start, week_end = cut_string(header, "(", ")").split(" - ")
             
+            start_date = date.fromisoformat(week_start)
+            end_date = date.fromisoformat(week_end)
+        
+        elif "день" in header.lower():
+            day = datetime.fromisoformat(header.split(" ")[-1]).date()
+                
+            start_date = day
+            end_date = day
+        
+        if t == "Расписание":
             diary = await diary_h.get_diary(ns, start_date, end_date)
             
             if diary:
                 out = out_h.print_diary(diary)
                 
                 output = out if out else output
+                
+        elif t == "Оценки":
+            diary = await diary_h.get_diary(ns, start_date, end_date)
+            
+            if diary:
+                out = out_h.print_marks_of_diary(diary)
+                
+                output = out if out else output
+            
     
     await callback.message.edit_text(
         text=header + "\n\n" + output,
@@ -464,3 +515,38 @@ async def school_handler(msg: Message):
     await msg.answer(info)
     
     ns.logout()
+    
+    
+@router.message(F.text.lower() == BUTTONS["marks"].lower())
+async def marks_handler(msg: Message, state: FSMContext):
+    await msg.answer(
+        "Оценки за какой период вывести?",
+        reply_markup=get_keyboard(msg.from_user.username, "marks")
+    )
+    
+    await state.set_state(Using.get_marks)
+    
+    
+@router.message(Using.get_marks)
+async def marks_process(msg: Message):
+    t = "[Оценки] "
+    
+    if msg.text.lower() == BUTTONS["marks_day"].lower():
+        await msg.answer(
+            t + out_h.print_unload_day_by_date(date.today()),
+            reply_markup=get_keyboard(msg.from_user.username, "inline_slider")
+        )
+    elif msg.text.lower() == BUTTONS["marks_week"].lower():
+        await msg.answer(
+            t + out_h.print_unload_week_by_n(0),
+            reply_markup=get_keyboard(msg.from_user.username, "inline_slider")
+        )
+    elif msg.text.lower() == BUTTONS["marks_cycle"].lower():
+        cycle_type = get_current_cycle_type(msg.from_user.username)[0]
+        
+        day = date.today()
+        
+        await msg.answer(
+            t + out_h.print_unload_cycle_by_date(cycle_type, day),
+            reply_markup=get_keyboard(msg.from_user.username, "inline_slider")
+        )
