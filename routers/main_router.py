@@ -20,9 +20,10 @@ BUTTONS = {
     "login": "Войти в аккаунт 🔐",
     "diary": "Расписание 🗓",
     "marks": "Оценки 🥇",
-    "time": "Время до... ⏰",
+    "time": "Сколько осталось? ⏰",
     "school": "О школе 🏫",
-    "duty": "Просроченные задания 😎"
+    "duty": "Просроченные задания 😎",
+    "back": "Назад ◀️"
 }
 
 
@@ -36,8 +37,6 @@ db_cur = db_con.cursor()
 
 class Form(StatesGroup):
     input_login_info = State()
-
-
 
 class Using(StatesGroup):
     get_diary = State()
@@ -106,32 +105,46 @@ async def get_NetSchoolAPI(tg_us: str) -> NetSchoolAPI | None:
         return None
         
 
-def get_keyboard(tg_us: str) -> types.ReplyKeyboardMarkup:
+# mode = "base" | "diary" | "marks" | "time"
+def get_keyboard(tg_us: str, mode: str = "base") -> types.ReplyKeyboardMarkup:
     kb = []
     placeholder = "Выберите команду"
     one_click = False
     
-    if check_login(tg_us):
-        kb = [
-            [
-                types.KeyboardButton(text=BUTTONS["diary"]),
-                types.KeyboardButton(text=BUTTONS["marks"])
-            ],
-            [
-                types.KeyboardButton(text=BUTTONS["time"]),
-                types.KeyboardButton(text=BUTTONS["school"])
-            ],
-            [
-                types.KeyboardButton(text=BUTTONS["duty"])
+    if mode == "base":
+        if check_login(tg_us):
+            kb = [
+                [
+                    types.KeyboardButton(text=BUTTONS["diary"]),
+                    types.KeyboardButton(text=BUTTONS["marks"])
+                ],
+                [
+                    types.KeyboardButton(text=BUTTONS["time"]),
+                    types.KeyboardButton(text=BUTTONS["school"])
+                ],
+                [
+                    types.KeyboardButton(text=BUTTONS["duty"])
+                ]
             ]
-        ]
-    else:
+        else:
+            kb = [[
+                    types.KeyboardButton(text=BUTTONS["login"]),
+            ]]
+            
+            placeholder = "Необходимо войти в аккаунт"
+            one_click = True
+    elif mode == "diary":
+        ...
+    elif mode == "marks":
+        ...
+    elif mode == "time":
         kb = [[
-                types.KeyboardButton(text=BUTTONS["login"]),
+            types.KeyboardButton(text=BUTTONS["subj_time_left"]),
+            types.KeyboardButton(text=BUTTONS["day_time_left"])
         ]]
-        
-        placeholder = "Необходимо войти в аккаунт"
-        one_click = True
+    else:
+        kb = [[types.KeyboardButton(text=BUTTONS["back"])]]
+    
         
     keyboard = types.ReplyKeyboardMarkup(
         keyboard=kb,
@@ -212,8 +225,29 @@ async def login_process(msg: Message, state: FSMContext):
         return
     
     await state.clear()
+
+
+
+# -- Команды --
+
+@router.message(F.text.lower() == BUTTONS["time"].lower())
+async def time_handler(msg: Message):
+    ns = await get_NetSchoolAPI(msg.from_user.username)
     
+    if not ns:
+        await msg.answer(
+            "❌ Не удалось подключиться к электронному дневнику!"
+        )
+        
+        return
     
+    subj_time_left = await out_h.print_subject_time_left(ns)
+    day_time_left = await out_h.print_day_time_left(ns)
+    
+    await msg.answer(subj_time_left)
+    await msg.answer(day_time_left)
+    
+    await ns.logout()
     
 
 
