@@ -19,8 +19,7 @@ async def main():
         'МБОУ «ЦО № 34»'
     )
     
-    
-    print(await out_h.print_day_time_left(ns))
+    print(await out_h.print_school_info(ns))
     
     
     await ns.logout()

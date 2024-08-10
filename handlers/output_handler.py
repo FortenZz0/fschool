@@ -177,3 +177,24 @@ async def print_day_time_left(ns: NetSchoolAPI) -> str:
         seconds = time_left.seconds % 60
         
         return f"До конца учебного дня осталось:\n{hours} часов {minutes} минут {seconds} секунд"
+    
+    
+# ВЫВОД ИНФОРМАЦИИ О ШКОЛЕ
+async def print_school_info(ns: NetSchoolAPI) -> str:
+    info = await ns.school()
+    
+    output = [
+        "Краткая информация о Вашей школе:",
+        f" * Название: {info.name}",
+        f" * Краткое описание: {info.about}",
+        f" * Юр. адрес: {info.address}",
+        f" * Email: {info.email}",
+        f" * Сайт школы: {info.site}",
+        f" * Контактный телефон: {info.phone}",
+        f" * Директор: {info.director}",
+        f" * Зам. по АХЧ: {info.AHC}",
+        f" * Зам. по ИТ: {info.IT}",
+        f" * Зам. по УВР: {info.UVR}"
+    ]
+    
+    return "\n".join(output).strip()
