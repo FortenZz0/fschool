@@ -230,3 +230,5 @@ async def school_handler(msg: Message):
     
     info = await out_h.print_school_info(ns)
     await msg.answer(info)
+    
+    ns.logout()
