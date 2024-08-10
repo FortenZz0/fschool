@@ -8,6 +8,8 @@ from handlers import days_handler as days_h
 from handlers import diary_handler as diary_h
 from handlers import marks_handler as marks_h
 
+from aiogram import html
+
 
 WEEKDAYS = [
     "Понедельник",
@@ -53,22 +55,24 @@ def print_day_diary(day: Day, n: int | None = None) -> str:
     weekday = WEEKDAYS[day.day.isoweekday() - 1]
     output += weekday
     
+    output = html.bold(output)
+    
     # -- Дата и продолжительность дня --
     day_start = day.lessons[0].start.isoformat()[:-3]
     day_end = day.lessons[-1].end.isoformat()[:-3]
     
-    output += f" ({day.day.isoformat()} {day_start}-{day_end})"
+    output += html.italic(f" ({day.day.isoformat()} {day_start}-{day_end})")
     
     # -- Уроки --
     for lesson in day.lessons:
         les_start = lesson.start.isoformat()[:-3]
-        les_end = lesson.start.isoformat()[:-3]
+        les_end = lesson.end.isoformat()[:-3]
         
         subj = lesson.subject
         if subj in list(SUBJECT_TRANSLATE.keys()):
             subj = SUBJECT_TRANSLATE[subj]
         
-        output += f"\n   {lesson.number}) {subj} ({les_start}-{les_end})"
+        output += f"\n   {lesson.number}) {subj} " + html.italic(f"({les_start}-{les_end})")
         
         ass = lesson.assignments
         if not ass:
@@ -82,7 +86,7 @@ def print_day_diary(day: Day, n: int | None = None) -> str:
                 homework = a.content
                 
             if a.mark:
-                marks.append(str(a.mark))
+                marks.append(html.bold(str(a.mark)))
                                 
         if marks:
             output += f" - [{', '.join(marks)}]"

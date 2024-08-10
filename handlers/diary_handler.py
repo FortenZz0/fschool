@@ -40,7 +40,7 @@ async def get_cycle_diary_by_n(ns: NetSchoolAPI, cycle_type: str, n: int) -> Dia
 # ПОЛУЧИТЬ ДНЕВНИК ТЕКУЩЕЙ ЧЕТВЕРТИ/ТРИМЕСТРА
 # cycle_type = "quarters" | "trimesters"
 async def get_current_cycle_diary(ns: NetSchoolAPI, cycle_type: str) -> Diary | None:
-    cycle = dh.get_cycle_by_date(cycle_type, dh.TODAY)
+    cycle = dh.get_cycle_by_date(cycle_type, date.today())
     
     if not cycle:
         return None

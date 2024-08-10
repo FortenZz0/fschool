@@ -19,10 +19,14 @@ from handlers import marks_handler as marks_h
 BUTTONS = {
     "login": "Войти в аккаунт 🔐",
     "diary": "Расписание 🗓",
+    "diary_today": "На сегодня",
+    "diary_next_day": "На завтра",
+    "diary_week": "На неделю",
     "marks": "Оценки 🥇",
-    "time": "Сколько осталось? ⏰",
+    "time": "Время ⏰",
     "school": "О школе 🏫",
     "duty": "Просроченные задания 😎",
+    "cycle": "Учебный период",
     "back": "Назад ◀️"
 }
 
@@ -105,7 +109,7 @@ async def get_NetSchoolAPI(tg_us: str) -> NetSchoolAPI | None:
         return None
         
 
-# mode = "base" | "diary" | "marks" | "time"
+# mode = "base" | "diary" | "marks"
 def get_keyboard(tg_us: str, mode: str = "base") -> types.ReplyKeyboardMarkup:
     kb = []
     placeholder = "Выберите команду"
@@ -128,20 +132,26 @@ def get_keyboard(tg_us: str, mode: str = "base") -> types.ReplyKeyboardMarkup:
             ]
         else:
             kb = [[
-                    types.KeyboardButton(text=BUTTONS["login"]),
+                types.KeyboardButton(text=BUTTONS["login"]),
             ]]
             
-            placeholder = "Необходимо войти в аккаунт"
+            placeholder = "Вход в аккаунт"
             one_click = True
     elif mode == "diary":
-        ...
+        kb = [
+            [
+                types.KeyboardButton(text=BUTTONS["diary_today"]),
+                types.KeyboardButton(text=BUTTONS["diary_next_day"])
+            ],
+            [
+                types.KeyboardButton(text=BUTTONS["diary_week"])
+            ],
+            [
+                types.KeyboardButton(text=BUTTONS["back"])
+            ]
+        ]
     elif mode == "marks":
         ...
-    elif mode == "time":
-        kb = [[
-            types.KeyboardButton(text=BUTTONS["subj_time_left"]),
-            types.KeyboardButton(text=BUTTONS["day_time_left"])
-        ]]
     else:
         kb = [[types.KeyboardButton(text=BUTTONS["back"])]]
     
@@ -230,6 +240,73 @@ async def login_process(msg: Message, state: FSMContext):
 
 # -- Команды --
 
+@router.message(F.text.lower() == BUTTONS["diary"].lower())
+async def diary_handler(msg: Message, state: FSMContext):
+    await msg.answer(
+        "Какое расписание вывести?",
+        reply_markup=get_keyboard(msg.from_user.username, "diary")
+    )
+    
+    await state.set_state(Using.get_diary)
+    
+    
+@router.message(Using.get_diary)
+async def diary_process(msg: Message, state: FSMContext):
+    ns = await get_NetSchoolAPI(msg.from_user.username)
+    
+    if not ns:
+        await msg.answer(
+            "❌ Не удалось подключиться к электронному дневнику!",
+            reply_markup=get_keyboard(msg.from_user.username)
+        )
+        return
+    
+    diary = None
+    
+    if msg.text.lower() == BUTTONS["diary_today"].lower():
+        today = await days_h.get_current_day(ns)
+        
+        if not today:
+            await msg.answer(
+                "❌ Не удалось подключиться к электронному дневнику!",
+                reply_markup=get_keyboard(msg.from_user.username)
+            )
+            return
+        
+        diary = await diary_h.get_diary(ns, today.day, today.day)
+        
+    elif msg.text.lower() == BUTTONS["diary_next_day"].lower():
+        next_day = await days_h.get_next_day(ns)
+        
+        if not next_day:
+            await msg.answer(
+                "❌ Не удалось подключиться к электронному дневнику!",
+                reply_markup=get_keyboard(msg.from_user.username)
+            )
+            return
+        
+        diary = await diary_h.get_diary(ns, next_day.day, next_day.day)
+        
+    elif msg.text.lower() == BUTTONS["diary_week"].lower():
+        diary = await diary_h.get_diary(ns, None, None)
+        
+    if not diary:
+        await msg.answer(
+            "❌ Не удалось получить расписание!",
+            reply_markup=get_keyboard(msg.from_user.username)
+        )
+        return
+    
+    output = out_h.print_diary(diary)
+    
+    await msg.answer(
+        output,
+        reply_markup=get_keyboard(msg.from_user.username)
+    )
+        
+    await ns.logout()
+        
+
 @router.message(F.text.lower() == BUTTONS["time"].lower())
 async def time_handler(msg: Message):
     ns = await get_NetSchoolAPI(msg.from_user.username)
@@ -238,7 +315,6 @@ async def time_handler(msg: Message):
         await msg.answer(
             "❌ Не удалось подключиться к электронному дневнику!"
         )
-        
         return
     
     subj_time_left = await out_h.print_subject_time_left(ns)
@@ -259,7 +335,6 @@ async def school_handler(msg: Message):
         await msg.answer(
             "❌ Не удалось подключиться к электронному дневнику!"
         )
-        
         return
     
     info = await out_h.print_school_info(ns)

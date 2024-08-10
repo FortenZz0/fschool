@@ -5,9 +5,6 @@ import asyncio
 import json
 
 
-TODAY = date.today()
-# TODAY = date(2024, 5, 20)
-
 
 # ПОЛУЧИТЬ ДЕНЬ ПО ДАТЕ
 async def get_day(ns: NetSchoolAPI, day_date: date) -> Day | None:
@@ -23,7 +20,17 @@ async def get_day(ns: NetSchoolAPI, day_date: date) -> Day | None:
 
 # ПОЛУЧИТЬ ТЕКУЩИЙ ДЕНЬ
 async def get_current_day(ns: NetSchoolAPI) -> Day | None:    
-    day = await get_day(ns, TODAY)
+    day = await get_day(ns, date.today())
+    
+    return day
+
+
+# ПОЛУЧИТЬ СЛЕДУЮЩИЙ ДЕНЬ
+async def get_next_day(ns: NetSchoolAPI) -> Day | None: 
+    today = date.today()
+    next_day = date(today.year, today.month, today.day + 1)
+       
+    day = await get_day(ns, next_day)
     
     return day
 
@@ -71,14 +78,14 @@ def get_cycle_by_n(cycle_type: str, n: int) -> tuple[str, date, date] | None:
 # ПОЛУЧИТЬ ДАТЫ НАЧАЛА И КОНЦА ТЕКУЩЕЙ ЧЕТВЕРТИ/ТРИМЕСТРА
 # cycle_type = "quarters" | "trimesters"
 def get_current_cycle(cycle_type: str) -> list[Day]:    
-    return get_cycle_by_date(cycle_type, TODAY)
+    return get_cycle_by_date(cycle_type, date.today())
 
 
 # ПОЛУЧИТЬ ДАТЫ НАЧАЛА И КОНЦА ЧЕТВЕРТИ/ТРИМЕСТРА ПОСЛЕ (ИЛИ ПЕРЕД) ТЕКУЩИМ
 # cycle_type = "quarters" | "trimesters"
 # add: int -- какой цикл по счёту после (или перед, если add < 0) текущего
 def get_add_cycle(cycle_type: str, add: int) -> tuple[str, date, date]:
-    today = TODAY
+    today = date.today()
     
     cycles = get_schooldays()[cycle_type]
     
@@ -115,6 +122,6 @@ def get_cycle_days_left(cycle_type: str) -> tuple[int, int]:
     
     end = cycle[t+1]
     
-    return end - TODAY, t
+    return end - date.today(), t
     
     
