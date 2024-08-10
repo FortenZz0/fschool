@@ -240,6 +240,16 @@ async def login_process(msg: Message, state: FSMContext):
 
 # -- Команды --
 
+@router.message(F.text.lower() == BUTTONS["back"].lower())
+async def back_handler(msg: Message, state: FSMContext):
+    await msg.answer(
+        "Выберите команду",
+        reply_markup=get_keyboard(msg.from_user.username)
+    )
+    
+    await state.clear()
+
+
 @router.message(F.text.lower() == BUTTONS["diary"].lower())
 async def diary_handler(msg: Message, state: FSMContext):
     await msg.answer(
