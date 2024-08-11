@@ -550,3 +550,34 @@ async def marks_process(msg: Message):
             t + out_h.print_unload_cycle_by_date(cycle_type, day),
             reply_markup=get_keyboard(msg.from_user.username, "inline_slider")
         )
+        
+        
+@router.message(F.text.lower() == BUTTONS["duty"].lower())
+async def duty_handler(msg: Message):
+    ns = await get_NetSchoolAPI(msg.from_user.username)
+    
+    if not ns:
+        await msg.answer(
+            "❌ Не удалось подключиться к электронному дневнику!",
+        )
+        return
+    
+    cycle_type = get_current_cycle_type(msg.from_user.username)[0]
+    cycles = days_h.get_schooldays()[cycle_type]
+
+    start_date = date.fromisoformat(cycles[0]["start"])
+    end_date = date.fromisoformat(cycles[-1]["end"])
+    
+    diary = await diary_h.get_diary(ns, start_date, end_date)
+    
+    if not diary:
+        await msg.answer(
+            "❌ Не удалось получить данные из дневника!",
+        )
+        await ns.logout()
+        return
+    
+    output = out_h.print_duty_of_diary(diary)
+    
+    await msg.answer(output)
+    await ns.logout()

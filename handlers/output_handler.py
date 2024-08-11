@@ -114,14 +114,14 @@ def print_marks_of_diary(diary: Diary) -> str:
     marks = marks_h.get_marks_of_diary(diary)
     
     for k, v in marks.items():
-        output.append(f"* {k} ({len(v)}): {v} - {sum(v) / len(v):.2}")
+        output.append(f"* ({len(v)}) {k}: {v}  --  {sum(v) / len(v):.2}")
     
     return "\n".join(output)
 
 
 # ВЫВОД ПРОСРОЧЕННЫХ ЗАДАНИЙ В ДНЕВНИКЕ
 def print_duty_of_diary(diary: Diary) -> str:
-    output = ["Просроченные задания за учебный период:"]
+    output = ["Ваши просроченные задания:"]
     
     n = 1
     for day in diary.schedule:
