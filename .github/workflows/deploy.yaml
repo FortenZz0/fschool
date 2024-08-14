@@ -1,0 +1,37 @@
+name: Сборка и выгрузка
+
+on:
+    push:
+        branches: [ "main" ]
+    pull_request:
+        branches: [ "main" ]
+
+
+jobs:
+    build:
+        name: Сборка
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+            - run: pip install -r requirements
+
+            - name: Deploy
+              uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+              with:
+                  server: fortenzz.beget.tech
+                  username: fortenzz
+                  password: 789964kOl)
+                  local-dir: ./
+                  exclude: |
+                      /.git*
+                      /.git*/
+                      /.github*
+                      /.github*/
+                      /.vscode/
+                      /README.md
+                      /test*
+                      /.venv*
+                      /LICENCE
+                      
