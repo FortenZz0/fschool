@@ -1,4 +1,4 @@
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from netschoolapi import NetSchoolAPI
 from netschoolapi.schemas import Lesson, Day, Diary
 import asyncio
@@ -146,6 +146,14 @@ def get_week_by_n(n: int, last_year: int | None = None) -> tuple[date, date, int
     week_start = datetime.fromisocalendar(year, week_n, 1)
     week_end = datetime.fromisocalendar(year, week_n, 7)
     
+    if now.weekday == 7:
+        td = timedelta(days=7)
+        
+        week_start += td
+        week_end += td
+        
+        week_n = (week_n + 1) % 52
+    
     return week_start.date(), week_end.date(), week_n
 
 
@@ -156,6 +164,8 @@ def get_week_by_date(day: date) -> tuple[date, date, int]:
         day.isocalendar().week,
         day.isocalendar().weekday
     ).isocalendar()
+    
+    print(week.weekday)
     
     week_start = datetime.fromisocalendar(week.year, week.week, 1)
     week_end = datetime.fromisocalendar(week.year, week.week, 7)
