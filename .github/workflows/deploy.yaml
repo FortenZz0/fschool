@@ -16,6 +16,7 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v3
             - run: pip install -r requirements.txt
+            - run: python3 fortenzz.beget.tech/main.py
 
             - name: Deploy
               uses: SamKirkland/FTP-Deploy-Action@v4.3.4
