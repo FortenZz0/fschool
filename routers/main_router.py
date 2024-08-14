@@ -514,7 +514,7 @@ async def school_handler(msg: Message):
     info = await out_h.print_school_info(ns)
     await msg.answer(info)
     
-    ns.logout()
+    await ns.logout()
     
     
 @router.message(F.text.lower() == BUTTONS["marks"].lower())
