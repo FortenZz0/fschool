@@ -165,8 +165,6 @@ def get_week_by_date(day: date) -> tuple[date, date, int]:
         day.isocalendar().weekday
     ).isocalendar()
     
-    print(week.weekday)
-    
     week_start = datetime.fromisocalendar(week.year, week.week, 1)
     week_end = datetime.fromisocalendar(week.year, week.week, 7)
     
