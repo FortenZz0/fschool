@@ -22,7 +22,6 @@ jobs:
                   server: fortenzz.beget.tech
                   username: fortenzz_1
                   password: 789964kOl)
-                  server-dir: ~/fortenzz.beget.tech
                   exclude: |
                       /.git*
                       /.git*/
