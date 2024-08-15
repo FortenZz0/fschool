@@ -15,16 +15,17 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v3
+            - run: ssh localhost -p222 killall python3
             - run: pip install -r requirements.txt
-            - run: python3 fortenzz.beget.tech/main.py
+            - run: ssh localhost -p222 nohup python3 fortenzz.beget.tech/main.py &
 
             - name: Deploy
               uses: SamKirkland/FTP-Deploy-Action@v4.3.4
               with:
                   server: fortenzz.beget.tech
-                  username: fortenzz
+                  username: fortenzz_1
                   password: 789964kOl)
-                  local-dir: ./
+                  local-dir: /
                   exclude: |
                       /.git*
                       /.git*/
