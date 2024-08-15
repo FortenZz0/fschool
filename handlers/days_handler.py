@@ -46,15 +46,20 @@ def get_schooldays() -> dict:
 # cycle_type = "quarters" | "trimesters"
 def get_cycle_by_date(cycle_type: str, target_date: date) -> tuple[str, date, date] | None:
     schooldays = get_schooldays()
+    
+    out_cycle = None
 
     for cycle in schooldays[cycle_type]:
         start = date.fromisoformat(cycle["start"])
         end = date.fromisoformat(cycle["end"])
         
         if start <= target_date <= end:
-            return cycle["name"], start, end
+            out_cycle = cycle
+            break
+    else:
+        out_cycle = schooldays[cycle_type][0]
         
-    return None
+    return out_cycle["name"], start, end
 
 
 # ПОЛУЧИТЬ ДАТЫ НАЧАЛА И КОНЦА ЧЕТВЕРТИ/ТРИМЕСТРА ПО НОМЕРУ

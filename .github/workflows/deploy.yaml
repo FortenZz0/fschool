@@ -19,17 +19,18 @@ jobs:
             - name: Deploy
               uses: SamKirkland/FTP-Deploy-Action@v4.3.5
               with:
-                  server: fortenzz.beget.tech
-                  username: fortenzz_1
-                  password: 789964kOl)
-                  exclude: |
-                      /.git*
-                      /.git*/
-                      /.github*
-                      /.github*/
-                      /.vscode/
-                      /README.md
-                      /test*
-                      /.venv*
-                      /LICENCE
+                server: fortenzz.beget.tech
+                username: fortenzz_1
+                password: 789964kOl)
+                exclude: |
+                    /.git
+                    /.git*
+                    /.git*/
+                    /.github*
+                    /.github*/
+                    /.vscode/
+                    /README.md
+                    /test*
+                    /.venv*
+                    /LICENCE
                       
