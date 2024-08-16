@@ -59,18 +59,17 @@ def get_cycle_by_date(cycle_type: str, target_date: date) -> tuple[str, date, da
     else:
         out_cycle = schooldays[cycle_type][0]
         
-    return out_cycle["name"], start, end
+    return list(out_cycle.values())
 
 
 # ПОЛУЧИТЬ ДАТЫ НАЧАЛА И КОНЦА ЧЕТВЕРТИ/ТРИМЕСТРА ПО НОМЕРУ
 # cycle_type = "quarters" | "trimesters"
-def get_cycle_by_n(cycle_type: str, n: int) -> tuple[str, date, date] | None:
+def get_cycle_by_n(cycle_type: str, n: int) -> tuple[str, date, date]:
     schooldays = get_schooldays()
     
     cycles = schooldays[cycle_type]
     
-    if n >= len(cycles):
-        return None
+    n = n % len(cycles)
     
     target_cycle = cycles[n]
     
