@@ -19,9 +19,11 @@ jobs:
             - name: Deploy
               uses: SamKirkland/FTP-Deploy-Action@v4.3.5
               with:
-                server: fortenzz.beget.tech
-                username: fortenzz_1
-                password: 789964kOl)
+                server: 31.129.57.152
+                username: root
+                password: uRQffuXQghAy
+                protocol: ftps
+                port: 22
                 exclude: |
                     /.git
                     /.git*
