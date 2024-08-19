@@ -17,22 +17,11 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Deploy
-              uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+              uses: wlixcc/SFTP-Deploy-Action@v1.2.4
               with:
-                server: 31.129.57.152
-                username: root
-                password: uRQffuXQghAy
-                protocol: ftps
-                port: 22
-                exclude: |
-                    /.git
-                    /.git*
-                    /.git*/
-                    /.github*
-                    /.github*/
-                    /.vscode/
-                    /README.md
-                    /test*
-                    /.venv*
-                    /LICENCE
+                username: 'root'
+                server: '31.129.57.152'
+                ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }} 
+                local_path: '/'
+                remote_path: '~/fschool'
                       
