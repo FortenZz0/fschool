@@ -21,7 +21,6 @@ jobs:
               with:
                 username: 'root'
                 server: '31.129.57.152'
-                password: ${{ secrets.ROOT_PASSWORD }}
                 ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }} 
                 local_path: '/'
                 remote_path: '~/fschool'
