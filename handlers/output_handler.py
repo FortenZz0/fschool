@@ -22,22 +22,23 @@ WEEKDAYS = [
 ]
 
 SUBJECT_TRANSLATE = {
-    "Элективный курс \"Методология решения задач по физике\"": "Физика ЭЛЕКТИВ",
-    "Алгебра и начала математического анализа": "Алгебра",
-    "Основы безопасности жизнедеятельности": "ОБЖ",
-    "Иностранный язык (английский).": "Английский",
-    "Иностранный язык (немецкий).": "Немецкий",
-    "Вероятность и статистика": "Вер. и Стат.",
-    "Индивидуальный проект": "Инд. проект",
-    "Физическая культура": "Физкультура",
-    "Информатика и ИКТ": "Информатика",
-    "Русский язык": "Русский"
+    "элективный курс \"методология решения задач по физике\"": "Физика ЭЛЕКТИВ",
+    "алгебра и начала математического анализа": "Алгебра",
+    "основы безопасности жизнедеятельности": "ОБЖ",
+    "иностранный язык (английский).": "Английский",
+    "основы безопасности и защиты родины": "ОБЗР",
+    "иностранный язык (немецкий).": "Немецкий",
+    "вероятность и статистика": "Вер. и Стат.",
+    "индивидуальный проект": "Инд. проект",
+    "физическая культура": "Физкультура",
+    "информатика и икт": "Информатика",
+    "русский язык": "Русский"
 }
 
 
 # ЗАМЕНА УРОКА НА БОЛЕЕ КОРОТКУЮ ВЕРСИЮ НАПИСАНИЯ
 def translate_subject(subj: str) -> str:
-    if subj in list(SUBJECT_TRANSLATE.keys()):
+    if subj.lower() in list(SUBJECT_TRANSLATE.keys()):
         return SUBJECT_TRANSLATE[subj]
     
     return subj
@@ -101,6 +102,8 @@ def print_day_diary(day: Day, n: int | None = None) -> str:
 def print_diary(diary: Diary) -> str:
     output = []
     
+    diary.schedule.sort(key=lambda x: x.day)
+    
     for i, day in enumerate(diary.schedule):
         output.append(print_day_diary(day, i+1))
         
@@ -155,9 +158,9 @@ async def print_subject_time_left(ns: NetSchoolAPI) -> str:
     
     match time_left[0]:
         case 0:
-            return f"Урок КОНЧИТСЯ через {time_left[1].seconds // 60} минут"
+            return f"Минут до НАЧАЛА урока: {time_left[1].seconds // 60}"
         case 1:
-            return f"Урок НАЧНЁТСЯ через {time_left[1].seconds // 60} минут"
+            return f"Минут до КОНЦА урока: {time_left[1].seconds // 60}"
         case 2:
             return f"Учебный день окончен"
         
@@ -175,7 +178,7 @@ async def print_day_time_left(ns: NetSchoolAPI) -> str:
         minutes = (time_left.seconds - hours * 3600) // 60
         seconds = time_left.seconds % 60
         
-        return f"До конца учебного дня осталось:\n{hours} часов {minutes} минут {seconds} секунд"
+        return f"До конца учебного дня осталось:\n-  часов: {hours}\n-  минут: {minutes}\n-  секунд: {seconds}"
     
     
 # ВЫВОД ИНФОРМАЦИИ О ШКОЛЕ
