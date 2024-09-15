@@ -38,7 +38,7 @@ BUTTONS = {
 router = Router()
 
 
-db_con = sqlite3.connect("data.db")
+db_con = sqlite3.connect(".data.db")
 db_cur = db_con.cursor()
 
 
