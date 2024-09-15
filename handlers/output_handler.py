@@ -39,7 +39,7 @@ SUBJECT_TRANSLATE = {
 # ЗАМЕНА УРОКА НА БОЛЕЕ КОРОТКУЮ ВЕРСИЮ НАПИСАНИЯ
 def translate_subject(subj: str) -> str:
     if subj.lower() in list(SUBJECT_TRANSLATE.keys()):
-        return SUBJECT_TRANSLATE[subj]
+        return SUBJECT_TRANSLATE[subj.lower()]
     
     return subj
 
