@@ -25,4 +25,4 @@ jobs:
                 remote-host: "31.129.57.185"
                 remote-user: "root"
                 ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-                remote-path: "fschool"
+                remote-path: "/root/fschool"
