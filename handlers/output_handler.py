@@ -189,7 +189,7 @@ async def print_day_time_left(ns: NetSchoolAPI) -> str:
         h = time_left[1].seconds // 3600
         m = (time_left[1].seconds - h * 3600) // 60
         
-        return f"До {'НАЧАЛА' if time_left == 0 else 'КОНЦА'} учебного дня:\n-  часов: {h}\n-  минут: {m}"
+        return f"До {'НАЧАЛА' if time_left[0] == 0 else 'КОНЦА'} учебного дня:\n-  часов: {h}\n-  минут: {m}"
     
     
 # ВЫВОД ИНФОРМАЦИИ О ШКОЛЕ
