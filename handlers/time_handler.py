@@ -1,10 +1,46 @@
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta, timezone
 from netschoolapi import NetSchoolAPI
+from timezonefinder import TimezoneFinder
 from netschoolapi.schemas import Lesson
+from geopy import geocoders
 import asyncio
+
 
 from handlers import days_handler as dh
 
+
+
+geo = geocoders.Yandex("3dd22f85-15b3-4db6-8fbc-04dcb63a878e")
+
+tf = TimezoneFinder()
+
+
+
+async def get_now(ns: NetSchoolAPI):
+    tz_convert = {
+        "Europe/Kaliningrad":  lambda x: x + timedelta(seconds=60*60*2),
+        "Europe/Moscow":       lambda x: x + timedelta(seconds=60*60*3),
+        "Europe/Samara":       lambda x: x + timedelta(seconds=60*60*4),
+        "Asia/Yekaterinburg":  lambda x: x + timedelta(seconds=60*60*5),
+        "Asia/Omsk":           lambda x: x + timedelta(seconds=60*60*6),
+        "Asia/Krasnoyarsk":    lambda x: x + timedelta(seconds=60*60*7),
+        "Asia/Irkutsk":        lambda x: x + timedelta(seconds=60*60*8),
+        "Asia/Yakutsk":        lambda x: x + timedelta(seconds=60*60*9),
+        "Asia/Vladivostok":    lambda x: x + timedelta(seconds=60*60*10),
+        "Asia/Magadan":        lambda x: x + timedelta(seconds=60*60*11),
+        "Asia/Kamchatka":      lambda x: x + timedelta(seconds=60*60*12),
+    }
+    
+    info = await ns.school()
+    addr = info.address
+    
+    loc = geo.geocode(addr)
+    tz_name = tf.timezone_at(lng=loc.longitude, lat=loc.latitude)
+    
+    now = datetime.now(timezone.utc)
+    
+    return tz_convert[tz_name](now)
+    
 
 
 # СКОЛЬКО ВРЕМЕНИ ОСТАЛОСЬ ДО КОНЦА УРОКА/ПЕРЕМЕНЫ
@@ -17,7 +53,8 @@ async def subject_time_left(ns: NetSchoolAPI) -> tuple[int, time] | None:
     if not day:
         return None
     
-    now = datetime.now()
+    # now = datetime.now()
+    now = await get_now(ns)
     
     for i, lesson in enumerate(day.lessons):
         lesson_start = datetime.combine(now.date(), lesson.start)
@@ -44,11 +81,12 @@ async def day_time_left(ns: NetSchoolAPI) -> time | None:
     if not day:
         return None
     
-    now = datetime.now()
+    # now = datetime.now()
+    now = await get_now(ns)
+    
     end_day = datetime.combine(now.date(), day.lessons[-1].end)
     
     if now < end_day:
         return end_day - now
     else:
         return None
-    
