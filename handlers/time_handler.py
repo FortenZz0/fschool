@@ -44,10 +44,11 @@ async def get_now(ns: NetSchoolAPI):
 
 
 # СКОЛЬКО ВРЕМЕНИ ОСТАЛОСЬ ДО КОНЦА УРОКА/ПЕРЕМЕНЫ
+# -1 - уч день ещё не начался
 # 0 - сейчас перемена, либо занятия не начались. возвращается время до начала следующего урока
 # 1 - сейчас урок. возвращается время до конца текущего урока
 # 2 - день кончился, уроков больше не будет. возвращается текущее время
-async def subject_time_left(ns: NetSchoolAPI) -> tuple[int, time] | None:
+async def subject_time_left(ns: NetSchoolAPI) -> tuple[int, time] | int | None:
     day = await dh.get_current_day(ns)
     
     if not day:
@@ -63,7 +64,10 @@ async def subject_time_left(ns: NetSchoolAPI) -> tuple[int, time] | None:
         
         # перемена. время до начала урока
         if lesson_start > current:
-            return 0, lesson_start - current
+            if i == 0:
+                return -1
+            else:
+                return 0, lesson_start - current
         
         # урок. время до начала перемены
         elif lesson_start <= current and lesson_end > current:
@@ -74,8 +78,11 @@ async def subject_time_left(ns: NetSchoolAPI) -> tuple[int, time] | None:
             return 2, current.time()
         
         
-# СКОЛЬКО ВРЕМЕНИ ОСТАЛОСЬ ДО КОНЦА УЧЕБНОГО ДНЯ
-async def day_time_left(ns: NetSchoolAPI) -> time | None:
+# СКОЛЬКО ВРЕМЕНИ ОСТАЛОСЬ ДО НАЧАЛА/КОНЦА УЧЕБНОГО ДНЯ
+# 0 - до начала
+# 1 - до конца
+# None - уч день окончен
+async def day_time_left(ns: NetSchoolAPI) -> tuple[int, time] | None:
     day = await dh.get_current_day(ns)
     
     if not day:
@@ -84,9 +91,12 @@ async def day_time_left(ns: NetSchoolAPI) -> time | None:
     # now = datetime.now()
     now = await get_now(ns)
     
+    start_day = datetime.combine(now.date(), day.lessons[0].start, timezone.utc)
     end_day = datetime.combine(now.date(), day.lessons[-1].end, timezone.utc)
     
-    if now < end_day:
-        return end_day - now
+    if now < start_day:
+        return 0, start_day - now
+    elif start_day > now < end_day:
+        return 1, end_day - now
     else:
         return None
