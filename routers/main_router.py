@@ -264,6 +264,8 @@ async def start_handler(msg: Message):
         reply_markup=keyboard
     )
     
+    await msg.anwer()
+    
     if not check_login(msg.from_user.username):
         await msg.answer(f"Для входа в аккаунт своего электронного дневника используй кнопку \"{BUTTONS['login']}")
 
@@ -277,7 +279,7 @@ f"Отправьте одним сообщением следующие данн
   [ВАШ ЛОГИН]\n\
   [ВАШ ПАРОЛЬ]\n\
   [НАЗВАНИЕ ШКОЛЫ]\n\
-  [УЧЕБНЫЙ ПЕРИОД (Ч|Т|П)]\n\n\
+  [УЧЕБНЫЙ ПЕРИОД (одна из букв): Ч  Т  П]\n\n\
 Подсказка, где брать эти данные:\n\
 - Сайт дневника: ссылка на эл. дневник (https://####.ru)\n\
       Либо воспользуйтесь {html.link('Списком инстансов СГО', 'https://web.archive.org/web/20221204181741/https://sg-o.ru/')}\n\
