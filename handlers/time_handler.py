@@ -84,7 +84,7 @@ async def day_time_left(ns: NetSchoolAPI) -> time | None:
     # now = datetime.now()
     now = await get_now(ns)
     
-    end_day = datetime.combine(now.date(), day.lessons[-1].end)
+    end_day = datetime.combine(now.date(), day.lessons[-1].end, timezone.utc)
     
     if now < end_day:
         return end_day - now
