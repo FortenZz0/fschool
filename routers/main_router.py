@@ -495,7 +495,9 @@ async def time_handler(msg: Message):
     day_time_left = await out_h.print_day_time_left(ns)
     
     await msg.answer(subj_time_left)
-    await msg.answer(day_time_left)
+    
+    if subj_time_left != day_time_left:
+        await msg.answer(day_time_left)
     
     await ns.logout()
     

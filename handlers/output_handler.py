@@ -159,15 +159,23 @@ async def print_subject_time_left(ns: NetSchoolAPI) -> str:
     if not time_left:
         return "Сегодня выходной или каникулы"
     
+    h = time_left[1].second // 3600
+    m = (time_left[1].second - 3600 * h) // 60
+    # s = time_left[1].second - 3600 * h - 60 * m
+    
+    out = ""
+    
     match time_left[0]:
         case 0:
-            return f"Минут до НАЧАЛА урока: {time_left[1].seconds // 60}"
+            out = "До НАЧАЛА урока: \n"
         case 1:
-            return f"Минут до КОНЦА урока: {time_left[1].seconds // 60}"
+            out = "До КОНЦА урока: \n"
         case 2:
             return f"Учебный день окончен"
         
-    return "НЕИЗВЕСТНАЯ ОШИБКА"
+    out += f"\n  - часов: {h}\n  - минут: {m}"
+        
+    return out
 
 
 # ВЫВОД ВРЕМЕНИ ДО КОНЦА УЧЕБНОГО ДНЯ
@@ -179,9 +187,9 @@ async def print_day_time_left(ns: NetSchoolAPI) -> str:
     else:
         hours = time_left.seconds // 3600
         minutes = (time_left.seconds - hours * 3600) // 60
-        seconds = time_left.seconds % 60
+        # seconds = time_left.seconds % 60
         
-        return f"До конца учебного дня осталось:\n-  часов: {hours}\n-  минут: {minutes}\n-  секунд: {seconds}"
+        return f"До конца учебного дня:\n-  часов: {hours}\n-  минут: {minutes}"
     
     
 # ВЫВОД ИНФОРМАЦИИ О ШКОЛЕ
