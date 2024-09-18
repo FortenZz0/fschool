@@ -159,17 +159,16 @@ async def print_subject_time_left(ns: NetSchoolAPI) -> str:
     if not time_left:
         return "Сегодня выходной или каникулы"
     
-    h = time_left[1].second // 3600
-    m = (time_left[1].second - 3600 * h) // 60
-    # s = time_left[1].second - 3600 * h - 60 * m
     
     out = ""
     
     match time_left[0]:
-        case 0:
-            out = "До НАЧАЛА урока: \n"
-        case 1:
-            out = "До КОНЦА урока: \n"
+        case 0 | 1 as res:
+            h = time_left[1].seconds // 3600
+            m = (time_left[1].seconds - 3600 * h) // 60
+            # s = time_left[1].seconds - 3600 * h - 60 * m
+            
+            out = f"До {'НАЧАЛА' if res == 0 else 'КОНЦА'} урока: \n"
         case 2:
             return f"Учебный день окончен"
         
