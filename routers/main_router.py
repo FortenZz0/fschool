@@ -1,6 +1,6 @@
 from aiogram import types, F, Router, html
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.types import Message
+from aiogram.types import Message, BufferedInputFile
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
@@ -15,6 +15,7 @@ from handlers import days_handler as days_h
 from handlers import diary_handler as diary_h
 from handlers import output_handler as out_h
 from handlers import marks_handler as marks_h
+from handlers import file_handler as file_h
 
 
 
@@ -443,6 +444,8 @@ async def inline_slider_load_handler(callback: types.CallbackQuery):
     if ns:
         output = "-- ПУСТО --"
         
+        files = []
+        
         if "неделя" in header.lower() or "учебный период" in header.lower():
             week_start, week_end = cut_string(header, "(", ")").split(" - ")
             
@@ -463,6 +466,8 @@ async def inline_slider_load_handler(callback: types.CallbackQuery):
                 
                 output = out if out else output
                 
+                files = await file_h.get_files_from_diary(ns, diary)
+                
         elif t == "Оценки":
             diary = await diary_h.get_diary(ns, start_date, end_date)
             
@@ -470,12 +475,17 @@ async def inline_slider_load_handler(callback: types.CallbackQuery):
                 out = out_h.print_marks_of_diary(diary)
                 
                 output = out if out else output
-            
     
     await callback.message.edit_text(
         text=header + "\n\n" + output,
-        reply_markup=get_keyboard(callback.from_user.username, "inline_slider")
+        reply_markup=get_keyboard(callback.from_user.username, "inline_slider"),
     )
+    
+    
+    for buffer, file_name in files:
+        file = BufferedInputFile(buffer.getbuffer(), file_name)
+        
+        await callback.message.answer_document(file)
     
     await ns.logout()
     
