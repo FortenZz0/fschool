@@ -96,7 +96,7 @@ async def day_time_left(ns: NetSchoolAPI) -> tuple[int, time] | None:
     
     if now < start_day:
         return 0, start_day - now
-    elif start_day > now < end_day:
+    elif start_day < now < end_day:
         return 1, end_day - now
     else:
         return None
