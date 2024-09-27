@@ -9,12 +9,13 @@ from aiogram.enums.parse_mode import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 
-# from routers import main_router
 from routers import routers
+
 
 
 denv = find_dotenv()
 load_dotenv(denv)
+
 
 
 async def main():

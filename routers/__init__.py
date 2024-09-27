@@ -1,4 +1,3 @@
-from glob import glob
 import importlib
 import os
 
@@ -22,7 +21,7 @@ for f in router_dir:
         
         print(f"  \"{router_name}\" imported")
 
-print("All routers are imported\n")
+print("\n  All routers are imported\n")
 
 
 router_dir.close()
