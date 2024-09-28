@@ -1,5 +1,5 @@
 from aiogram import types, F, Router, html
-from aiogram.types import Message, BufferedInputFile
+from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
@@ -123,27 +123,22 @@ async def ns_login(url: str | None = None,
 
 # --- ROUTER MSG HANDLERS ---
 
-# Приветствие. FSM url
+# Начало входа. FSM url
 @router.message(Command("start"))
-async def start_handler(msg: Message, state: FSMContext):
+async def start_login_handler(msg: Message, state: FSMContext, sleep: bool = True, check_user: bool = True):
+    if check_user:
+        if get_user(msg.from_user.username):
+            return
+    
     settings = files.get_settings()
     
-    us = msg.from_user.username
-    print(us)
+    if sleep:
+        await asyncio.sleep(0.5)
     
-    await msg.answer(
-        settings["txt"]["start"],
-        reply_markup=keyboards.get_reply(
-            "main",
-            bool(get_admin(us))
-        ) if get_user(us) else None
-    )
-    
-    if not get_user(msg.from_user.username):
-        login_msg = await msg.answer(settings["txt"]["start_login"])
+    login_msg = await msg.answer(settings["txt"]["start_login"])
 
-        await state.set_data({LoginFSM.msg: login_msg})
-        await state.set_state(LoginFSM.url)
+    await state.set_data({LoginFSM.msg: login_msg})
+    await state.set_state(LoginFSM.url)
     
 
 # Получение ссылки на эж. FSM url -> login
@@ -243,13 +238,15 @@ async def try_login(state: FSMContext, username: str):
             password, school
         )
         
-        await login_msg.edit_text(
+        await login_msg.answer(
             settings["txt"]["login_success"],
             reply_markup=keyboards.get_reply(
                 "main",
                 bool(get_admin(username))
             )
         )
+        
+        await login_msg.delete()
         
         await state.clear()
     else:
@@ -265,7 +262,7 @@ async def try_login(state: FSMContext, username: str):
 
 # Начало изменения ссылки
 @router.callback_query(F.data == "edit_url")
-async def edit_url_handler(callback: types.CallbackQuery, state: FSMContext):
+async def edit_url_handler(callback: CallbackQuery, state: FSMContext):
     settings = files.get_settings()
     
     data = await state.get_data()
@@ -298,7 +295,7 @@ async def edit_url_process(msg: Message, state: FSMContext):
             
 # Начало изменения логина
 @router.callback_query(F.data == "edit_login")
-async def edit_login_handler(callback: types.CallbackQuery, state: FSMContext):
+async def edit_login_handler(callback: CallbackQuery, state: FSMContext):
     settings = files.get_settings()
     
     data = await state.get_data()
@@ -320,7 +317,7 @@ async def edit_login_process(msg: Message, state: FSMContext):
     
 # Начало изменения пароля
 @router.callback_query(F.data == "edit_pass")
-async def edit_password_handler(callback: types.CallbackQuery, state: FSMContext):
+async def edit_password_handler(callback: CallbackQuery, state: FSMContext):
     settings = files.get_settings()
     
     data = await state.get_data()
@@ -342,7 +339,7 @@ async def edit_password_process(msg: Message, state: FSMContext):
     
 # Начало изменения названия школы
 @router.callback_query(F.data == "edit_school")
-async def edit_school_handler(callback: types.CallbackQuery, state: FSMContext):
+async def edit_school_handler(callback: CallbackQuery, state: FSMContext):
     settings = files.get_settings()
     
     data = await state.get_data()
