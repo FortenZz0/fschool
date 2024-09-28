@@ -1,8 +1,6 @@
 from aiogram import types, F, Router, html
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import Message, BufferedInputFile
 from aiogram.filters import Command
-from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 
 from netschoolapi import NetSchoolAPI
@@ -18,9 +16,16 @@ router = Router(name=__name__)
 db = database.DB()
 
 
+trans_table = {
+    ord("\n"): " ",
+    ord("\t"): " ",
+    ord("\b"): " "
+}
+
 
 # --- SELF METHODS ---
 
+# Добавляет / в конце ссылки при необходимости
 format_url = lambda x: x if x[-1] == "/" else x + "/"
 
 
@@ -149,7 +154,7 @@ async def get_url_process(msg: Message, state: FSMContext):
     data = await state.get_data()
     login_msg = data[LoginFSM.msg]
     
-    url = format_url(msg.text)
+    url = format_url(msg.text.translate(trans_table))
     
     if url in settings["instances"]:
         await login_msg.edit_text(settings["txt"]["login_valid_url"])
@@ -175,7 +180,7 @@ async def get_login_process(msg: Message, state: FSMContext):
     
     await login_msg.edit_text(settings["txt"]["login_get_login"])
 
-    await state.update_data({LoginFSM.login: msg.text})
+    await state.update_data({LoginFSM.login: msg.text.translate(trans_table)})
     await state.set_state(LoginFSM.password)
     
     await msg.delete()
@@ -191,7 +196,7 @@ async def get_password_process(msg: Message, state: FSMContext):
     
     await login_msg.edit_text(settings["txt"]["login_get_pass"])
 
-    await state.update_data({LoginFSM.password: msg.text})
+    await state.update_data({LoginFSM.password: msg.text.translate(trans_table)})
     await state.set_state(LoginFSM.school)
     
     await msg.delete()
@@ -205,7 +210,7 @@ async def get_school_process(msg: Message, state: FSMContext):
     data = await state.get_data()
     login_msg = data[LoginFSM.msg]
     
-    await state.update_data({LoginFSM.school: msg.text})
+    await state.update_data({LoginFSM.school: msg.text.translate(trans_table)})
     
     await login_msg.edit_text(settings["txt"]["login_get_school"])
     await msg.delete()
@@ -279,7 +284,7 @@ async def edit_url_process(msg: Message, state: FSMContext):
     data = await state.get_data()
     login_msg = data[LoginFSM.msg]
     
-    url = format_url(msg.text)
+    url = format_url(msg.text.translate(trans_table))
     await msg.delete()
     
     if url in settings["instances"]:
@@ -307,7 +312,7 @@ async def edit_login_handler(callback: types.CallbackQuery, state: FSMContext):
 # Изменение логина
 @router.message(LoginFSM.edit_login)
 async def edit_login_process(msg: Message, state: FSMContext):
-    await state.update_data({LoginFSM.login: msg.text})
+    await state.update_data({LoginFSM.login: msg.text.translate(trans_table)})
     
     await msg.delete()
     await try_login(state, msg.from_user.username)
@@ -329,7 +334,7 @@ async def edit_password_handler(callback: types.CallbackQuery, state: FSMContext
 # Изменение пароля
 @router.message(LoginFSM.edit_password)
 async def edit_password_process(msg: Message, state: FSMContext):
-    await state.update_data({LoginFSM.password: msg.text})
+    await state.update_data({LoginFSM.password: msg.text.translate(trans_table)})
     
     await msg.delete()
     await try_login(state, msg.from_user.username)
@@ -351,7 +356,7 @@ async def edit_school_handler(callback: types.CallbackQuery, state: FSMContext):
 # Изменение названия школы
 @router.message(LoginFSM.edit_school)
 async def edit_school_process(msg: Message, state: FSMContext):
-    await state.update_data({LoginFSM.school: msg.text})
+    await state.update_data({LoginFSM.school: msg.text.translate(trans_table)})
     
     await msg.delete()
     await try_login(state, msg.from_user.username)
