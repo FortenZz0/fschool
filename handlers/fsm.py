@@ -14,3 +14,10 @@ class LoginFSM(StatesGroup):
     edit_login = State()
     edit_password = State()
     edit_school = State()
+    
+    
+# FSM для настроек
+class SettingsFSM(StatesGroup):
+    msg = State()
+    username = State()
+    cycle = State()
