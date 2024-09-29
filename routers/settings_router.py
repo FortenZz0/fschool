@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 from netschoolapi import NetSchoolAPI
 
-from handlers import database, files, keyboards, callback
+from handlers import database, files, keyboards
 from handlers.fsm import *
 
 from .login_router import start_login_handler
