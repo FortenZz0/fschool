@@ -259,12 +259,13 @@ async def admin_set_target_handler(callback: CallbackQuery, state: FSMContext):
     
     kb = keyboards.get_inline("admin_set_target")
     
+    await state.set_state(AdminFSM.set_target)
+    
     await admin_msg.edit_text(
         text=settings["txt"]["admin_set_target"],
         reply_markup=kb
     )
     
-    await state.set_state(AdminFSM.set_target)
     
     
 @router.callback_query(F.data.split(" ")[0] == "admin_target")
@@ -307,10 +308,16 @@ async def admin_target_process(msg: Message, state: FSMContext):
         await state.set_state(AdminFSM.empty)
         await admin_handler(admin_msg, state, False)
     else:
-        kb = keyboards.get_inline("admin_set_target")
-    
-        await admin_msg.edit_text(
-            text=settings["txt"]["admin_set_target_error"],
-            reply_markup=kb
-        )
+        error = settings["txt"]["admin_set_target_error"]
         
+        if admin_msg.html_text != error:
+            kb = keyboards.get_inline("admin_set_target")
+            
+            new_admin_msg = await admin_msg.edit_text(
+                text=error,
+                reply_markup=kb
+            )
+            
+            await state.update_data({AdminFSM.msg: new_admin_msg})
+        
+    await msg.delete()
