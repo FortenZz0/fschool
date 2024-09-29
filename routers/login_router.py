@@ -105,6 +105,11 @@ async def ns_login(url: str | None = None,
     data = [url, login, password, school]
     
     if tg_username:
+        admin = get_admin(tg_username)
+        
+        if admin:
+            tg_username = admin[1]
+        
         data = get_user(tg_username)[1:-1]
         
     ns = NetSchoolAPI(data[0])
@@ -124,7 +129,7 @@ async def ns_login(url: str | None = None,
 # --- ROUTER MSG HANDLERS ---
 
 # Начало входа. FSM url
-@router.message(Command("start"))
+# @router.message(Command("start"))
 async def start_login_handler(msg: Message, state: FSMContext, sleep: bool = True, check_user: bool = True):
     if check_user:
         if get_user(msg.from_user.username):

@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 from netschoolapi import NetSchoolAPI
 
-from handlers import database, files, keyboards, callback
+from handlers import database, files, keyboards
 from handlers.fsm import *
 
 from .login_router import start_login_handler
@@ -16,17 +16,18 @@ router = Router(name=__name__)
 db = database.DB()
 
 
+cycle_translate = {
+    "quarters": "четверть",
+    "trimesters": "триместр",
+    "half": "полугодие"
+}
+
+
 @router.message(F.text.lower() == files.get_settings()["buttons"]["reply"]["settings"].lower())
 @router.callback_query(F.data == "settings_back")
 async def settings_handler(msg: Message | CallbackQuery, state: FSMContext):
     settings = files.get_settings()
     
-    cycle_translate = {
-        "quarters": "четверть",
-        "trimesters": "триместр",
-        "half": "полугодие"
-    }
-        
     kb = keyboards.get_inline("settings_main")
     
     if isinstance(msg, Message):
@@ -88,7 +89,7 @@ async def edit_cycle_handler(callback: CallbackQuery, state: FSMContext):
 async def account_exit_handler(callback: CallbackQuery):
     settings = files.get_settings()
     
-    kb = keyboards.get_inline("sure", prefix="exit")
+    kb = keyboards.get_inline("sure", sub_str="exit")
     
     await callback.message.edit_text(
         settings["txt"]["exit_sure"],
