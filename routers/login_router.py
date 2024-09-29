@@ -124,7 +124,7 @@ async def ns_login(url: str | None = None,
 # --- ROUTER MSG HANDLERS ---
 
 # Начало входа. FSM url
-@router.message(Command("start"))
+# @router.message(Command("start"))
 async def start_login_handler(msg: Message, state: FSMContext, sleep: bool = True, check_user: bool = True):
     if check_user:
         if get_user(msg.from_user.username):
