@@ -21,3 +21,13 @@ class SettingsFSM(StatesGroup):
     msg = State()
     username = State()
     cycle = State()
+    
+
+# FSM для админки
+class AdminFSM(StatesGroup):
+    msg = State()
+    users = State()
+    admins = State()
+    users_page_n = State()
+    admins_page_n = State()
+    current_table = State()

@@ -88,7 +88,7 @@ async def edit_cycle_handler(callback: CallbackQuery, state: FSMContext):
 async def account_exit_handler(callback: CallbackQuery):
     settings = files.get_settings()
     
-    kb = keyboards.get_inline("sure", prefix="exit")
+    kb = keyboards.get_inline("sure", sub_str="exit")
     
     await callback.message.edit_text(
         settings["txt"]["exit_sure"],

@@ -4,12 +4,13 @@ from handlers import files
 
 
 
-
-
-
-
-def get_inline(kb_type: str, data: Iterable = [0, 0, 0, 0], prefix: str = "") -> InlineKeyboardMarkup:
+def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKeyboardMarkup:
     btn = files.get_settings()["buttons"]["inline"]
+    
+    min_data_len = 4
+    
+    if len(data) < min_data_len:
+        data += [0 for _ in range(min_data_len - len(data))]
     
     markups = {
         "edit_login_data": [
@@ -29,8 +30,12 @@ def get_inline(kb_type: str, data: Iterable = [0, 0, 0, 0], prefix: str = "") ->
             [InlineKeyboardButton(text=btn["back"], callback_data="settings_back")]
         ],
         "sure": [
-            [InlineKeyboardButton(text=btn["sure_yes"], callback_data=f"sure_{prefix} yes"),
-            InlineKeyboardButton(text=btn["sure_no"], callback_data=f"sure_{prefix} no")]
+            [InlineKeyboardButton(text=btn["sure_yes"], callback_data=f"sure_{sub_str} yes"),
+            InlineKeyboardButton(text=btn["sure_no"], callback_data=f"sure_{sub_str} no")]
+        ],
+        "admin_main": [
+            [InlineKeyboardButton(text=btn["admin_users"].format(data[0]), callback_data=f"admin_pages users")],
+            [InlineKeyboardButton(text=btn["admin_admins"].format(data[1]), callback_data=f"admin_pages admins")]
         ]
     }
     
@@ -73,3 +78,61 @@ def get_reply(kb_type: str, is_admin: bool) -> ReplyKeyboardMarkup:
     )
     
     return keyboard
+
+
+def generate_inline_pages(pages_type: str,
+                          data: Iterable = (),
+                          page: int = 0,
+                          size: int = 1):
+    if not data:
+        return None
+    
+    settings = files.get_settings()
+    
+    page_size = settings["values"]["admin_page_size"]
+    
+    start = page * page_size
+    all_pages = len(data) // page_size
+    
+    page_data = data[start:start+size]
+    
+    buttons = []
+    
+    for i, item in enumerate(page_data):
+        buttons.append([
+            InlineKeyboardButton(
+                text=f"[{start + i + 1}] {item[0]}", # username
+                callback_data=f"admin_table {pages_type} show {start + i}"
+            )
+        ])
+    
+    
+    if all_pages > 0:
+        prv = InlineKeyboardButton(
+            text=settings["buttons"]["inline"]["prev"],
+            callback_data=f"admin_table {pages_type} slide -1"
+        )
+        nxt = InlineKeyboardButton(
+            text=settings["buttons"]["inline"]["next"],
+            callback_data=f"admin_table {pages_type} slide 1"
+        )
+        
+        print(start, all_pages * page_size)
+        
+        if start == 0:
+            buttons.append([nxt])
+        elif 0 < start < (all_pages) * page_size:
+            buttons.append([prv, nxt])
+        else:
+            buttons.append([prv])
+            
+    
+    buttons.append([
+        InlineKeyboardButton(
+            text=settings["buttons"]["inline"]["back"],
+            callback_data=f"admin_table {pages_type} back 0"
+        )
+    ])
+    
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+    
