@@ -33,3 +33,5 @@ class AdminFSM(StatesGroup):
     current_table = State()
     new_query = State()
     new_query_table = State()
+    set_target = State()
+    empty = State()

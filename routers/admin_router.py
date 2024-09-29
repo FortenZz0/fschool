@@ -57,8 +57,12 @@ async def load_data(state: FSMContext) -> list[int, int]:
 @router.message(F.text.lower() == files.get_settings()["buttons"]["reply"]["admin"].lower())
 async def admin_handler(msg: Message, state: FSMContext, new_msg: bool = True):
     if new_msg:
-        if not get_admin(msg.from_user.username):
+        admin_data = get_admin(msg.from_user.username)
+        
+        if not admin_data:
             return
+    else:
+        admin_data = get_admin(msg.chat.username)
     
     settings = files.get_settings()
     
@@ -67,13 +71,13 @@ async def admin_handler(msg: Message, state: FSMContext, new_msg: bool = True):
     
     if new_msg:
         admin_msg = await msg.answer(
-            settings["txt"]["admin_main"],
+            settings["txt"]["admin_main"].format(*admin_data),
             reply_markup=kb
         )
     else:
         admin_msg = msg
         await msg.edit_text(
-            settings["txt"]["admin_main"],
+            settings["txt"]["admin_main"].format(*admin_data),
             reply_markup=kb
         )
     
@@ -244,3 +248,69 @@ async def new_query_process(msg: Message, state: FSMContext):
         await asyncio.sleep(1)
         
         await admin_handler(admin_msg, state, False)
+
+
+@router.callback_query(F.data == "admin_set_target")
+async def admin_set_target_handler(callback: CallbackQuery, state: FSMContext):
+    settings = files.get_settings()
+    
+    fsm_data = await state.get_data()
+    admin_msg = fsm_data[AdminFSM.msg]
+    
+    kb = keyboards.get_inline("admin_set_target")
+    
+    await admin_msg.edit_text(
+        text=settings["txt"]["admin_set_target"],
+        reply_markup=kb
+    )
+    
+    await state.set_state(AdminFSM.set_target)
+    
+    
+@router.callback_query(F.data.split(" ")[0] == "admin_target")
+async def admin_target_handler(callback: CallbackQuery, state: FSMContext):
+    action = callback.data.split(" ")[1]
+    
+    fsm_data = await state.get_data()
+    admin_msg = fsm_data[AdminFSM.msg]
+    admin_username = admin_msg.chat.username
+    
+    if action == "set_self":
+        db.execute(
+            "UPDATE admins SET using_username = ? WHERE username = ?",
+            (admin_username, admin_username)
+        )
+        db.commit()
+    
+    await state.set_state(AdminFSM.empty)
+    await admin_handler(admin_msg, state, False)
+    
+    
+@router.message(AdminFSM.set_target)
+async def admin_target_process(msg: Message, state: FSMContext):
+    settings = files.get_settings()
+    
+    fsm_data = await state.get_data()
+    admin_msg = fsm_data[AdminFSM.msg]
+    admin_username = admin_msg.chat.username
+    
+    target_username = msg.text.split("\n")[0]
+    user = get_user(target_username)
+    
+    if user:
+        db.execute(
+            "UPDATE admins SET using_username = ? WHERE username = ?",
+            (admin_username, target_username)
+        )
+        db.commit()
+        
+        await state.set_state(AdminFSM.empty)
+        await admin_handler(admin_msg, state, False)
+    else:
+        kb = keyboards.get_inline("admin_set_target")
+    
+        await admin_msg.edit_text(
+            text=settings["txt"]["admin_set_target_error"],
+            reply_markup=kb
+        )
+        

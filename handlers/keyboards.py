@@ -35,7 +35,8 @@ def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKe
         ],
         "admin_main": [
             [InlineKeyboardButton(text=btn["admin_users"].format(data[0]), callback_data="admin_pages users")],  # count of users
-            [InlineKeyboardButton(text=btn["admin_admins"].format(data[1]), callback_data="admin_pages admins")] # count of admins
+            [InlineKeyboardButton(text=btn["admin_admins"].format(data[1]), callback_data="admin_pages admins")], # count of admins
+            [InlineKeyboardButton(text=btn["admin_change_target"], callback_data="admin_set_target")]
         ],
         "admin_add_back": [
             [InlineKeyboardButton(text=btn["back"], callback_data=f"admin_table {data[0]} back 0")] # table
@@ -43,6 +44,10 @@ def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKe
         "admin_query_page": [
             [InlineKeyboardButton(text=btn["del"], callback_data=f"admin_table {data[0]} del {data[1]}"), # table, username
             InlineKeyboardButton(text=btn["back"], callback_data=f"admin_table {data[0]} back 0")] # table
+        ],
+        "admin_set_target": [
+            [InlineKeyboardButton(text=btn["admin_set_self_target"], callback_data=f"admin_target set_self"), # table, username
+            InlineKeyboardButton(text=btn["back"], callback_data=f"admin_target back")] # table
         ]
     }
     
