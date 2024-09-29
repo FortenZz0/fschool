@@ -8,12 +8,35 @@ from netschoolapi import NetSchoolAPI
 from handlers import database, files, keyboards
 from handlers.fsm import *
 
-from .login_router import get_admin, get_user
+from .login_router import get_admin, get_user, new_user, ns_login
+from .settings_router import cycle_translate
+
+import asyncio
 
 
 
 router = Router(name=__name__)
 db = database.DB()
+
+
+
+def new_admin(tg_username: str) -> bool:
+    """Записывает нового админа в базу данных
+
+    Args:
+        tg_username (str): Тг юз админа
+    """
+    
+    # if not get_user(tg_username):
+    #     return False
+    
+    db.execute(
+        "INSERT INTO admins(username, using_username) VALUES(?, ?)",
+        (tg_username, tg_username)
+    )
+    
+    db.commit()
+
 
 
 async def load_data(state: FSMContext) -> list[int, int]:
@@ -62,7 +85,7 @@ async def admin_handler(msg: Message, state: FSMContext, new_msg: bool = True):
 
     
 @router.callback_query(F.data.split(" ")[0] == "admin_pages")
-async def admin_pages_process(callback: CallbackQuery, state: FSMContext):
+async def admin_pages_handler(callback: CallbackQuery, state: FSMContext):
     settings = files.get_settings()
     
     show_table = callback.data.split(" ")[1]
@@ -92,11 +115,10 @@ async def admin_pages_process(callback: CallbackQuery, state: FSMContext):
     
     
 @router.callback_query(F.data.split(" ")[0] == "admin_table")
-async def admin_table_process(callback: CallbackQuery, state: FSMContext):
+async def admin_table_handler(callback: CallbackQuery, state: FSMContext):
     settings = files.get_settings()
     
     table, action, value = callback.data.split(" ")[1:]
-    value = int(value)
     
     fsm_data = await state.get_data()
     admin_msg = fsm_data[AdminFSM.msg]
@@ -105,9 +127,120 @@ async def admin_table_process(callback: CallbackQuery, state: FSMContext):
     
     if action == "back":
         await admin_handler(callback.message, state, False)
+    
     elif action == "slide":
         await state.update_data({
-            eval(f"AdminFSM.{table}_page_n"): page + value
+            eval(f"AdminFSM.{table}_page_n"): page + int(value)
         })
         
-        await admin_pages_process(callback, state)
+        await admin_pages_handler(callback, state)
+    
+    elif action == "add":
+        kb = keyboards.get_inline("admin_add_back", [table])
+        
+        await admin_msg.edit_text(
+            text=settings["txt"][f"admin_add_{table}"],
+            reply_markup=kb
+        )
+        
+        await state.set_state(AdminFSM.new_query)
+        await state.update_data({AdminFSM.new_query_table: table})
+    
+    elif action == "show":
+        data = list(show_data[int(value)])
+        
+        if table == "admins":
+            user_data = get_user(data[0])
+            
+            if user_data:
+                data = list(user_data) + [data[1]]
+            else:
+                data = [data[0], *["---" for _ in range(5)], data[1]] 
+        
+        kb = keyboards.get_inline("admin_query_page", [table, data[0]])
+        
+        if data[5] in list(cycle_translate.keys()):
+            data[5] = cycle_translate[data[5]]
+        
+        await admin_msg.edit_text(
+            text=settings["txt"][f"admin_show_{table}"].format(*data),
+            reply_markup=kb
+        )
+    
+    elif action == "del":
+        db.execute(f"DELETE FROM {table} WHERE username = ?", (value,))
+        db.commit()
+        
+        await admin_msg.edit_text(
+            text=settings["txt"][f"admin_del_{table}"].format(value),
+            reply_markup=None
+        )
+        
+        await asyncio.sleep(1)
+        
+        await admin_handler(admin_msg, state, False)
+                    
+
+@router.message(AdminFSM.new_query)
+async def new_query_process(msg: Message, state: FSMContext):
+    settings = files.get_settings()
+    
+    fsm_data = await state.get_data()
+    admin_msg = fsm_data[AdminFSM.msg]
+    table = fsm_data[AdminFSM.new_query_table]
+    
+    print(msg.text, table)
+    
+    if table == "users":
+        data = msg.text.split("\n")[0:4]
+        
+        if get_user(data[0]):            
+            await admin_msg.edit_text(
+                text=settings["txt"]["admin_user_exists_error"],
+                reply_markup=keyboards.get_inline("admin_add_back", [table])
+            )
+            
+            return
+        
+        ns = await ns_login(*data[1:])
+        
+        if not ns:
+            await admin_msg.edit_text(
+                text=settings["txt"]["admin_user_login_error"],
+                reply_markup=keyboards.get_inline("admin_add_back", [table])
+            )
+            return
+        
+        await ns.logout()
+        
+        new_user(*data)
+        
+        await admin_msg.edit_text(
+            text=settings["txt"]["admin_add_user_success"],
+            reply_markup=None
+        )
+        
+        await asyncio.sleep(1)
+        
+        await admin_handler(admin_msg, state, False)
+    elif table == "admins":
+        admin_username = msg.text.split("\n")[0]
+        
+        if get_admin(admin_username):            
+            await admin_msg.edit_text(
+                text=settings["txt"]["admin_exists_error"],
+                reply_markup=keyboards.get_inline("admin_add_back", [table])
+            )
+            
+            return
+        
+        new_admin(admin_username)
+        
+        await admin_msg.edit_text(
+            text=settings["txt"]["admin_add_admin_success"],
+            reply_markup=None
+        )
+        
+        await asyncio.sleep(1)
+        
+        await admin_handler(admin_msg, state, False)

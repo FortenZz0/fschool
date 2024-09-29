@@ -31,3 +31,5 @@ class AdminFSM(StatesGroup):
     users_page_n = State()
     admins_page_n = State()
     current_table = State()
+    new_query = State()
+    new_query_table = State()

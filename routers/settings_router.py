@@ -16,17 +16,18 @@ router = Router(name=__name__)
 db = database.DB()
 
 
+cycle_translate = {
+    "quarters": "четверть",
+    "trimesters": "триместр",
+    "half": "полугодие"
+}
+
+
 @router.message(F.text.lower() == files.get_settings()["buttons"]["reply"]["settings"].lower())
 @router.callback_query(F.data == "settings_back")
 async def settings_handler(msg: Message | CallbackQuery, state: FSMContext):
     settings = files.get_settings()
     
-    cycle_translate = {
-        "quarters": "четверть",
-        "trimesters": "триместр",
-        "half": "полугодие"
-    }
-        
     kb = keyboards.get_inline("settings_main")
     
     if isinstance(msg, Message):

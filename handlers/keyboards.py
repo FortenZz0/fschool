@@ -14,10 +14,10 @@ def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKe
     
     markups = {
         "edit_login_data": [
-            [InlineKeyboardButton(text=btn["edit_url"].format(data[0]), callback_data="edit_url")],
-            [InlineKeyboardButton(text=btn["edit_login"].format(data[1]), callback_data="edit_login")],
-            [InlineKeyboardButton(text=btn["edit_pass"].format(data[2]), callback_data="edit_pass")],
-            [InlineKeyboardButton(text=btn["edit_school"].format(data[3]), callback_data="edit_school")]
+            [InlineKeyboardButton(text=btn["edit_url"].format(data[0]), callback_data="edit_url")],      # url
+            [InlineKeyboardButton(text=btn["edit_login"].format(data[1]), callback_data="edit_login")],  # login
+            [InlineKeyboardButton(text=btn["edit_pass"].format(data[2]), callback_data="edit_pass")],    # password
+            [InlineKeyboardButton(text=btn["edit_school"].format(data[3]), callback_data="edit_school")] # school
         ],
         "settings_main": [
             [InlineKeyboardButton(text=btn["edit_cycle"], callback_data="edit_cycle")],
@@ -34,8 +34,15 @@ def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKe
             InlineKeyboardButton(text=btn["sure_no"], callback_data=f"sure_{sub_str} no")]
         ],
         "admin_main": [
-            [InlineKeyboardButton(text=btn["admin_users"].format(data[0]), callback_data=f"admin_pages users")],
-            [InlineKeyboardButton(text=btn["admin_admins"].format(data[1]), callback_data=f"admin_pages admins")]
+            [InlineKeyboardButton(text=btn["admin_users"].format(data[0]), callback_data="admin_pages users")],  # count of users
+            [InlineKeyboardButton(text=btn["admin_admins"].format(data[1]), callback_data="admin_pages admins")] # count of admins
+        ],
+        "admin_add_back": [
+            [InlineKeyboardButton(text=btn["back"], callback_data=f"admin_table {data[0]} back 0")] # table
+        ],
+        "admin_query_page": [
+            [InlineKeyboardButton(text=btn["del"], callback_data=f"admin_table {data[0]} del {data[1]}"), # table, username
+            InlineKeyboardButton(text=btn["back"], callback_data=f"admin_table {data[0]} back 0")] # table
         ]
     }
     
@@ -128,6 +135,10 @@ def generate_inline_pages(pages_type: str,
             
     
     buttons.append([
+        InlineKeyboardButton(
+            text=settings["buttons"]["inline"]["add"],
+            callback_data=f"admin_table {pages_type} add 0"
+        ),
         InlineKeyboardButton(
             text=settings["buttons"]["inline"]["back"],
             callback_data=f"admin_table {pages_type} back 0"
