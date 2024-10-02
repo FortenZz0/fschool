@@ -39,6 +39,7 @@ def new_admin(tg_username: str) -> bool:
 
 
 
+# Получение списка юзеров и админов и запись в FSM
 async def load_data(state: FSMContext) -> list[int, int]:
     db.execute("SELECT * FROM users")
     users = db.fetchall()
@@ -54,6 +55,7 @@ async def load_data(state: FSMContext) -> list[int, int]:
     return [len(users), len(admins)]
 
 
+# Главная страница админки
 @router.message(F.text.lower() == files.get_settings()["buttons"]["reply"]["admin"].lower())
 async def admin_handler(msg: Message, state: FSMContext, new_msg: bool = True):
     if new_msg:
@@ -87,7 +89,8 @@ async def admin_handler(msg: Message, state: FSMContext, new_msg: bool = True):
         AdminFSM.admins_page_n: 0
     })
 
-    
+
+# Просмотр таблиц через админку
 @router.callback_query(F.data.split(" ")[0] == "admin_pages")
 async def admin_pages_handler(callback: CallbackQuery, state: FSMContext):
     settings = files.get_settings()
@@ -116,8 +119,9 @@ async def admin_pages_handler(callback: CallbackQuery, state: FSMContext):
         ),
         reply_markup=kb
     )
-    
-    
+
+
+# Обработка нажатий кнопок в просмотре таблиц
 @router.callback_query(F.data.split(" ")[0] == "admin_table")
 async def admin_table_handler(callback: CallbackQuery, state: FSMContext):
     settings = files.get_settings()
@@ -129,17 +133,17 @@ async def admin_table_handler(callback: CallbackQuery, state: FSMContext):
     show_data = fsm_data[eval(f"AdminFSM.{table}")]
     page = fsm_data[eval(f"AdminFSM.{table}_page_n")]
     
-    if action == "back":
+    if action == "back": # Назад
         await admin_handler(callback.message, state, False)
     
-    elif action == "slide":
+    elif action == "slide": # Страница вперёд/назад
         await state.update_data({
             eval(f"AdminFSM.{table}_page_n"): page + int(value)
         })
         
         await admin_pages_handler(callback, state)
     
-    elif action == "add":
+    elif action == "add": # Добавить запись в таблицу
         kb = keyboards.get_inline("admin_add_back", [table])
         
         await admin_msg.edit_text(
@@ -150,7 +154,7 @@ async def admin_table_handler(callback: CallbackQuery, state: FSMContext):
         await state.set_state(AdminFSM.new_query)
         await state.update_data({AdminFSM.new_query_table: table})
     
-    elif action == "show":
+    elif action == "show": # Показать подробности о записи
         data = list(show_data[int(value)])
         
         if table == "admins":
@@ -171,7 +175,7 @@ async def admin_table_handler(callback: CallbackQuery, state: FSMContext):
             reply_markup=kb
         )
     
-    elif action == "del":
+    elif action == "del": # Удалить запись
         db.execute(f"DELETE FROM {table} WHERE username = ?", (value,))
         db.commit()
         
@@ -185,6 +189,7 @@ async def admin_table_handler(callback: CallbackQuery, state: FSMContext):
         await admin_handler(admin_msg, state, False)
                     
 
+# Обработка добавления записи в таблицу
 @router.message(AdminFSM.new_query)
 async def new_query_process(msg: Message, state: FSMContext):
     settings = files.get_settings()
@@ -193,9 +198,7 @@ async def new_query_process(msg: Message, state: FSMContext):
     admin_msg = fsm_data[AdminFSM.msg]
     table = fsm_data[AdminFSM.new_query_table]
     
-    print(msg.text, table)
-    
-    if table == "users":
+    if table == "users": # Добавление юзера
         data = msg.text.split("\n")[0:4]
         
         if get_user(data[0]):            
@@ -227,7 +230,8 @@ async def new_query_process(msg: Message, state: FSMContext):
         await asyncio.sleep(1)
         
         await admin_handler(admin_msg, state, False)
-    elif table == "admins":
+    
+    elif table == "admins": # Добавление админа
         admin_username = msg.text.split("\n")[0]
         
         if get_admin(admin_username):            
@@ -250,6 +254,7 @@ async def new_query_process(msg: Message, state: FSMContext):
         await admin_handler(admin_msg, state, False)
 
 
+# Изменение целевого(просматриваемого) аккаунта для админов
 @router.callback_query(F.data == "admin_set_target")
 async def admin_set_target_handler(callback: CallbackQuery, state: FSMContext):
     settings = files.get_settings()
@@ -265,9 +270,9 @@ async def admin_set_target_handler(callback: CallbackQuery, state: FSMContext):
         text=settings["txt"]["admin_set_target"],
         reply_markup=kb
     )
-    
-    
-    
+
+
+# Возврат целевого(просматриваемого) аккаунта для админов к исходному аккаунту админов
 @router.callback_query(F.data.split(" ")[0] == "admin_target")
 async def admin_target_handler(callback: CallbackQuery, state: FSMContext):
     action = callback.data.split(" ")[1]
@@ -285,8 +290,9 @@ async def admin_target_handler(callback: CallbackQuery, state: FSMContext):
     
     await state.set_state(AdminFSM.empty)
     await admin_handler(admin_msg, state, False)
-    
-    
+
+
+# Назначение целевого аккаунта для админа
 @router.message(AdminFSM.set_target)
 async def admin_target_process(msg: Message, state: FSMContext):
     settings = files.get_settings()
