@@ -14,6 +14,7 @@ from .login_router import get_admin, get_user, start_login_handler
 router = Router(name=__name__)
 
 
+# Обработка команды /start
 @router.message(Command("start"))
 async def start_handler(msg: Message, state: FSMContext):
     settings = files.get_settings()
