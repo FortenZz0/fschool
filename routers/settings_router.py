@@ -23,6 +23,7 @@ cycle_translate = {
 }
 
 
+# Начальная страница настроек
 @router.message(F.text.lower() == files.get_settings()["buttons"]["reply"]["settings"].lower())
 @router.callback_query(F.data == "settings_back")
 async def settings_handler(msg: Message | CallbackQuery, state: FSMContext):
@@ -54,8 +55,9 @@ async def settings_handler(msg: Message | CallbackQuery, state: FSMContext):
             settings["txt"]["settings"].format(cycle),
             reply_markup=kb
         )
-    
-    
+
+
+# Начало выбора нового учебного периода в настройках    
 @router.callback_query(F.data == "edit_cycle")
 async def edit_cycle_handler(callback: CallbackQuery):
     settings = files.get_settings()
@@ -66,8 +68,9 @@ async def edit_cycle_handler(callback: CallbackQuery):
         settings["txt"]["settings_edit_cycle"],
         reply_markup=kb
     )
-    
-    
+
+
+# Изменение учебного периода в базе данных
 @router.callback_query(F.data.split(" ")[0] == "change_cycle")
 async def edit_cycle_handler(callback: CallbackQuery, state: FSMContext):
     new_cycle = callback.data.split(" ")[-1]
@@ -85,6 +88,7 @@ async def edit_cycle_handler(callback: CallbackQuery, state: FSMContext):
     await settings_handler(callback, state)
 
 
+# Начало выхода из аккаунта
 @router.callback_query(F.data == "account_exit")
 async def account_exit_handler(callback: CallbackQuery):
     settings = files.get_settings()
@@ -97,6 +101,7 @@ async def account_exit_handler(callback: CallbackQuery):
     )
 
 
+# Удаление записи о пользователе в бд (выход из аккаунта)
 @router.callback_query(F.data.split(" ")[0] == "sure_exit")
 async def edit_cycle_handler(callback: CallbackQuery, state: FSMContext):
     action = callback.data.split(" ")[-1]
