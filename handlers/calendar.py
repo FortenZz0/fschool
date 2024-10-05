@@ -37,6 +37,7 @@ async def get_now(ns: NetSchoolAPI) -> datetime:
     Returns:
         _datetime_: datetime + time zone
     """
+    
     info = await ns.school()
     addr = info.address
     
@@ -95,3 +96,52 @@ async def get_week(ns: NetSchoolAPI,
     week_end = today + timedelta(days=days_to_week_end + add_weeks * 7)
     
     return week_start, week_end
+
+
+async def get_cycle_current(ns: NetSchoolAPI,
+                            cycle_type: str,
+                            add_cycles: int = 0) -> tuple[date, date, str]:
+    """Получение текущего учебного периода
+
+    Args:
+        ns (NetSchoolAPI): объект NSAPI
+        cycle_type (str): Тип учебного периода ["quarters" | "trimesters" | "half"]
+        add_cycles (int, optional): Сколько периодов нужно добавить к текущему периоду. Defaults to 0.
+
+    Returns:
+        tuple[date, date, str]: Дата начала, дата конца, название
+    """
+    
+    cycles = files.get_settings()["schooldays"][cycle_type]
+    
+    today = await get_day(ns, skip_sunday=False)
+    current_cycle = 0
+    
+    for i, cycle in enumerate(cycles):
+        start = date.fromisoformat(cycle["start"])
+        end = date.fromisoformat(cycle["end"])
+        
+        if today < start: # Каникулы в учебном году
+            # Проверка на летние каникулы до начала учебного года
+            # Если сейчас летние каникулы, выдаём 1 четверть, иначе прошлую четверть
+            if i != 0:
+                current_cycle -= 1
+            break
+        elif start <= today <= end: # Учебный период
+            current_cycle = i
+            break
+        else: # Если мы не попали ни в уч. п., ни в каникулы, прибавляем
+            current_cycle += 1
+    else: # Летние каникулы после учебного года
+        current_cycle -= 1
+    
+    current_cycle = (current_cycle + add_cycles) % len(cycles)
+    
+    cycle = cycles[current_cycle]
+    cycle_start = date.fromisoformat(cycle["start"])
+    cycle_end = date.fromisoformat(cycle["end"])
+    cycle_name = cycle["name"]
+    
+    return cycle_start, cycle_end, cycle_name
+    
+    
