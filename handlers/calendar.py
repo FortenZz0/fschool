@@ -49,12 +49,14 @@ async def get_now(ns: NetSchoolAPI) -> datetime:
 
 
 
-async def get_today(ns: NetSchoolAPI,
-                    skip_sunday: bool = True) -> date:
+async def get_day(ns: NetSchoolAPI,
+                  add_days: int = 0,
+                  skip_sunday: bool = True) -> date:
     """Получение даты с учётом часового пояса юзера
 
     Args:
         ns (NetSchoolAPI): объект NSAPI
+        add_days (int, optional): Сколько дней нужно добавить к текущей дате. Defaults to 0.
         skip_sunday (bool, optional): Переход на следующий день в воскресенье. Defaults to True.
 
     Returns:
@@ -62,10 +64,34 @@ async def get_today(ns: NetSchoolAPI,
     """
     
     now = await get_now(ns)
+    now += timedelta(days=add_days)
     
     if skip_sunday and now.weekday() == 6:
         now += timedelta(days=1)
-        
+    
     return now.date()
 
 
+async def get_week(ns: NetSchoolAPI,
+                   add_weeks: int = 0,
+                   skip_sunday: bool = True) -> tuple[date, date]:
+    """Получение текущей недели
+
+    Args:
+        ns (NetSchoolAPI): объект NSAPI
+        add_weeks (int, optional): Сколько недель нужно добавить к текущей дате. Defaults to 0.
+        skip_sunday (bool, optional): Переход на следующий день в воскресенье. Defaults to True.
+
+    Returns:
+        tuple[date, date]: Дата начала недели (понедельник) и дата конца недели (суббота)
+    """
+    
+    today = await get_day(ns, skip_sunday=skip_sunday)
+    
+    days_to_week_start = today.weekday()
+    days_to_week_end = 6 - today.weekday() - 1
+    
+    week_start = today - timedelta(days=days_to_week_start - add_weeks * 7)
+    week_end = today + timedelta(days=days_to_week_end + add_weeks * 7)
+    
+    return week_start, week_end
