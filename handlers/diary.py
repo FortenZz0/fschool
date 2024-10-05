@@ -5,13 +5,13 @@ from netschoolapi.schemas import Lesson, Diary
 from geopy import geocoders
 import asyncio
 
-from handlers import files, calendar
+from handlers import files, calendar, schemas
 
 
 
 async def get_diary(ns: NetSchoolAPI,
                     start: date,
-                    end: date) -> Diary | None:
+                    end: date) -> schemas.MyDiary | None:
     """Получение дневника за определённый период
 
     Args:
@@ -25,12 +25,12 @@ async def get_diary(ns: NetSchoolAPI,
     
     diary = await ns.diary(start, end)
     
-    return diary
+    return schemas.MyDiary(diary)
 
 
 async def get_day_diary(ns: NetSchoolAPI,
                         add_days: int = 0,
-                        skip_sunday: bool = True) -> Diary | None:
+                        skip_sunday: bool = True) -> schemas.MyDiary | None:
     """Получение дневника на день
 
     Args:
@@ -51,7 +51,7 @@ async def get_day_diary(ns: NetSchoolAPI,
 
 async def get_week_diary(ns: NetSchoolAPI,
                          add_weeks: int = 0,
-                         skip_sunday: bool = True) -> Diary | None:
+                         skip_sunday: bool = True) -> schemas.MyDiary | None:
     """Получение дневника на неделю
 
     Args:
