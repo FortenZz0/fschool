@@ -5,6 +5,8 @@ from netschoolapi.schemas import Lesson
 from geopy import geocoders
 import asyncio
 
+from handlers import files
+
 
 
 geo = geocoders.Yandex("3dd22f85-15b3-4db6-8fbc-04dcb63a878e")
@@ -25,8 +27,16 @@ tz_convert = {
 }
 
 
-# Получение текущего времени с учётом часового пояса юзера
-async def get_now(ns: NetSchoolAPI):    
+
+async def get_now(ns: NetSchoolAPI) -> datetime:    
+    """Получение текущего времени с учётом часового пояса юзера
+
+    Args:
+        ns (NetSchoolAPI): Объект NSAPI
+
+    Returns:
+        _datetime_: datetime + time zone
+    """
     info = await ns.school()
     addr = info.address
     
@@ -37,5 +47,25 @@ async def get_now(ns: NetSchoolAPI):
     
     return tz_convert[tz_name](now)
 
+
+
+async def get_today(ns: NetSchoolAPI,
+                    skip_sunday: bool = True) -> date:
+    """Получение даты с учётом часового пояса юзера
+
+    Args:
+        ns (NetSchoolAPI): объект NSAPI
+        skip_sunday (bool, optional): Переход на следующий день в воскресенье. Defaults to True.
+
+    Returns:
+        date: Дата с учётом часового пояса юзера
+    """
+    
+    now = await get_now(ns)
+    
+    if skip_sunday and now.weekday() == 6:
+        now += timedelta(days=1)
+        
+    return now.date()
 
 
