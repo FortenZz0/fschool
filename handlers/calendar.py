@@ -98,7 +98,7 @@ async def get_week(ns: NetSchoolAPI,
     return week_start, week_end
 
 
-async def get_cycle_current(ns: NetSchoolAPI,
+async def get_cycle(ns: NetSchoolAPI,
                             cycle_type: str,
                             add_cycles: int = 0) -> tuple[date, date, str]:
     """Получение текущего учебного периода
