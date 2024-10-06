@@ -20,7 +20,7 @@ async def get_diary(ns: NetSchoolAPI,
         end (date): Конец периода
 
     Returns:
-        Diary | None: Дневник за период
+        MyDiary | None: Дневник за период
     """
     
     diary = await ns.diary(start, end)
@@ -39,7 +39,7 @@ async def get_day_diary(ns: NetSchoolAPI,
         skip_sunday (bool, optional): Пропускать ли воскресенье. Defaults to True.
 
     Returns:
-        Diary | None: Дневник на день
+        MyDiary | None: Дневник на день
     """
     
     now = await calendar.get_day(ns, add_days, skip_sunday)
@@ -60,7 +60,7 @@ async def get_week_diary(ns: NetSchoolAPI,
         skip_sunday (bool, optional): Пропускать ли воскресенье. Defaults to True.
 
     Returns:
-        Diary | None: Дневник на день
+        MyDiary | None: Дневник на день
     """
     
     start, end = await calendar.get_week(ns, add_weeks, skip_sunday)
