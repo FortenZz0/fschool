@@ -294,8 +294,6 @@ class MyMarks(MySchema):
             marks.sort(key=lambda x: x.date)
             for mark in marks:
                 res.append(str(mark))
-                
-            res.append("")
         
             
         return "\n".join(res)
