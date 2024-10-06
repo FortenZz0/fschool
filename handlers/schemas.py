@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from netschoolapi.schemas import Diary, Day, Lesson, Assignment
-from datetime import date
+from datetime import date, time, datetime
 from typing import Any
 
 from handlers import files
@@ -26,8 +26,8 @@ class MyDiary(MySchema):
         self.days = [MyDay(day) for day in self._source.schedule]
         self.days.sort(key=lambda x: x.date)
         
-        self.start = self._source.start
-        self.end = self._source.end
+        self.start: date = self._source.start
+        self.end: date = self._source.end
         
         
     def __str__(self):
@@ -69,12 +69,12 @@ class MyDay(MySchema):
 
         self.lessons = [MyLesson(les) for les in self._source.lessons]
         
-        self.date = self._source.day
-        self.weekday_n = self.date.weekday()
-        self.weekday = self.WEEKDAYS[self.weekday_n]
+        self.date: date = self._source.day
+        self.weekday_n: int = self.date.weekday()
+        self.weekday: str = self.WEEKDAYS[self.weekday_n]
         
-        self.start = self.lessons[0].start
-        self.end = self.lessons[-1].end
+        self.start: time = self.lessons[0].start
+        self.end: time = self.lessons[-1].end
         
         # self.length = self.end - self.start
         
@@ -112,13 +112,13 @@ class MyLesson(MySchema):
             "Русский язык": "Русский"
         }
 
-        self.date = self._source.day
-        self.start = self._source.start
-        self.end = self._source.end
-        self.room = self._source.room
-        self.number = self._source.number
+        self.date: date = self._source.day
+        self.start: time = self._source.start
+        self.end: time = self._source.end
+        self.room: str = self._source.room
+        self.number: int = self._source.number
         
-        self._subj = self._source.subject
+        self._subj: str = self._source.subject
         
         if self._subj in self.SUBJECT_TRANSLATE.keys():
             self.subject = self.SUBJECT_TRANSLATE[self._subj]
@@ -166,13 +166,13 @@ class MyAssignment(MySchema):
     def __init__(self, source: Assignment):
         super().__init__(source)
         
-        self.id = self._source.id
-        self.comment = self._source.comment
-        self.type = self._source.type
-        self.content = self._source.content
-        self.mark = self._source.mark
-        self.is_duty = self._source.is_duty
-        self.deadline = self._source.deadline
+        self.id: int = self._source.id
+        self.comment: str = self._source.comment
+        self.type: str = self._source.type
+        self.content: str = self._source.content
+        self.mark: int = self._source.mark
+        self.is_duty: bool = self._source.is_duty
+        self.deadline: date = self._source.deadline
         
         
     def __str__(self):
