@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from netschoolapi.schemas import Diary, Day, Lesson, Assignment
 from datetime import date, time, datetime
-from typing import Any
+from typing import Any, Iterable
 
 from handlers import files
 
@@ -187,3 +187,143 @@ class MyAssignment(MySchema):
             res += templates["assignment_mark"].format(self.mark)
             
         return res
+
+
+
+class MyMarks(MySchema):
+    def __init__(self, source: MyDiary):
+        super().__init__(source)
+        
+        self.extend_subjects = ["Разговоры о важном"]
+        
+        self.marks_obj = {}
+        self.marks = []
+        
+        self._load_marks_obj()
+        self._load_marks()
+        
+    
+    def _load_marks_obj(self):
+        res = {}
+        
+        for day in self._source.days:
+            for les in day.lessons:
+                if les.subject not in list(res.keys()):
+                    res[les.subject] = []
+                
+                for ass in les.assignments:
+                    
+                    if ass.mark:
+                    
+                        mark = MyMark({"id": ass.id,
+                                "subject": les.subject,
+                                "date": les.date,
+                                "type": ass.type,
+                                "mark": ass.mark})
+                        
+                        if les.subject in res.keys():
+                            res[les.subject].append(mark)
+                        else:
+                            res[les.subject] = [mark]
+                        
+        
+        res_2 = sorted(res.items(), key=lambda x: x[0])
+        
+        for i in res_2:
+            subj, marks = i
+            
+            if subj in self.extend_subjects:
+                continue
+            
+            self.marks_obj[subj] = []
+            
+            for mark in marks:
+                self.marks_obj[subj].append(mark)
+                    
+    
+    
+    def _load_marks(self):
+        res = []
+        
+        for v in self.marks_obj.values():
+            v.sort(key=lambda x: x.mark, reverse=True)
+            res.extend(v)
+            
+        res.sort(key=lambda x: x.date)
+        
+        self.marks = res
+    
+    
+    def marks_by_subj(self, subj: str) -> list[int] | None:
+        res = []
+        
+        for k, v in self.marks_obj.items():
+            for mark in v:
+                if k == subj:
+                    res.append(mark.mark)
+                
+        return res
+    
+    
+    def __str__(self):
+        templates = files.get_settings()["schemas"]
+        
+        res = []
+        
+        if self._source.start == self._source.end:
+            res.append(templates["all_marks_header_one_day"].format(
+                self._source.start
+            ))
+        else:
+            res.append(templates["all_marks_header"].format(
+                self._source.start,
+                self._source.end
+            ))
+        
+        for i, item in enumerate(self.marks_obj.items()):
+            subj, marks = item
+            
+            ms = self.marks_by_subj(subj)
+            
+            res.append(templates["marks_header"].format(
+                i + 1,
+                subj,
+                round(sum(ms) / len(ms), 2) if ms else 0
+            ))
+            
+            marks.sort(key=lambda x: x.date)
+            for mark in marks:
+                res.append(str(mark))
+                
+            res.append("")
+        
+            
+        return "\n".join(res)
+    
+        
+
+class MyMark(MySchema):
+    def __init__(self, source: dict):
+        super().__init__(source)
+        
+        self.id: int = source["id"]
+        self.subject: str = source["subject"]
+        self.date: date = source["date"]
+        self.type: str = source["type"]
+        self.mark: int = source["mark"]
+        
+        
+    def __str__(self):
+        templates = files.get_settings()["schemas"]
+        
+        res = templates["mark"].format(
+            self.type,
+            self.date,
+            self.mark
+        )
+        
+        return res
+    
+        
+    def __repr__(self):
+        return str(self.get_source())
