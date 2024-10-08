@@ -1,6 +1,6 @@
 from netschoolapi import NetSchoolAPI
 
-import database
+from handlers import database
 
 
 db = database.DB()
@@ -113,3 +113,6 @@ async def ns_login(url: str | None = None,
             return None
     else:
         return None
+    
+    
+

@@ -35,3 +35,17 @@ class AdminFSM(StatesGroup):
     new_query_table = State()
     set_target = State()
     empty = State()
+    
+    
+    
+# FSM для слайдера
+class SliderFSM(StatesGroup):
+    msg = State() # bot msg
+    title = State() # str
+    obj = State() # MyDiary / MyMarks / ...
+    obj_func = State() # Callable
+    period_func = State() # Callable
+    period = State() # int
+    txt_template = State() # str
+    ns = State() # NetSchoolApi
+    

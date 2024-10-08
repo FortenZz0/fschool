@@ -48,6 +48,11 @@ def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKe
         "admin_set_target": [
             [InlineKeyboardButton(text=btn["admin_set_self_target"], callback_data=f"admin_target set_self"), # table, username
             InlineKeyboardButton(text=btn["back"], callback_data=f"admin_target back")] # table
+        ],
+        "slider": [
+            [InlineKeyboardButton(text=btn["load"], callback_data="slider_cmd load")],
+            [InlineKeyboardButton(text=btn["prev"], callback_data="slider_move -1"),
+            InlineKeyboardButton(text=btn["next"], callback_data="slider_move 1")]
         ]
     }
     
@@ -61,7 +66,7 @@ def get_reply(kb_type: str, is_admin: bool) -> ReplyKeyboardMarkup:
     markups = {
         "main": [
             [
-                KeyboardButton(text=btn["schedule"]),
+                KeyboardButton(text=btn["diary"]),
                 KeyboardButton(text=btn["marks"])
             ],
             [

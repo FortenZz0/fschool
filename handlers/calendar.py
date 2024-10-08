@@ -75,7 +75,7 @@ async def get_day(ns: NetSchoolAPI,
 
 async def get_week(ns: NetSchoolAPI,
                    add_weeks: int = 0,
-                   skip_sunday: bool = True) -> tuple[date, date]:
+                   skip_sunday: bool = True) -> tuple[date, date, int]:
     """Получение текущей недели
 
     Args:
@@ -95,12 +95,14 @@ async def get_week(ns: NetSchoolAPI,
     week_start = today - timedelta(days=days_to_week_start - add_weeks * 7)
     week_end = today + timedelta(days=days_to_week_end + add_weeks * 7)
     
-    return week_start, week_end
+    week_n = (week_start.isocalendar().week - 35) % 52
+    
+    return week_start, week_end, week_n
 
 
 async def get_cycle(ns: NetSchoolAPI,
-                            cycle_type: str,
-                            add_cycles: int = 0) -> tuple[date, date, str]:
+                    cycle_type: str,
+                    add_cycles: int = 0) -> tuple[date, date, str]:
     """Получение текущего учебного периода
 
     Args:
