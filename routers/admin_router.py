@@ -6,9 +6,9 @@ from aiogram.fsm.context import FSMContext
 from netschoolapi import NetSchoolAPI
 
 from handlers import database, files, keyboards
+from handlers.login import *
 from handlers.fsm import *
 
-from .login_router import get_admin, get_user, new_user, ns_login
 from .settings_router import cycle_translate
 
 import asyncio
