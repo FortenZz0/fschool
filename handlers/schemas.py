@@ -196,6 +196,9 @@ class MyMarks(MySchema):
         
         self.extend_subjects = ["Разговоры о важном"]
         
+        self.start: date = source.start
+        self.end: date = source.end
+        
         self.marks_obj = {}
         self.marks = []
         
