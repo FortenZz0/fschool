@@ -51,7 +51,8 @@ async def create_slider(msg: Message,
     
     await state.set_data({
         SliderFSM.title: title,
-        SliderFSM.obj_func: obj_func
+        SliderFSM.obj_func: obj_func,
+        SliderFSM.cache: {}
     })
     
     await start_get_period(msg, state, title, title == settings["buttons"]["reply"]["diary"])
@@ -104,7 +105,7 @@ async def new_slider(state: FSMContext):
         period = await period_func(ns)
         
         template = format_template(title, period)
-        print(period)
+        
         kb_name = "slider" if period[0] == period[1] else "slider_cycle"
         kb = keyboards.get_inline(kb_name)
         
@@ -114,7 +115,7 @@ async def new_slider(state: FSMContext):
         )
         
         await state.update_data({
-            SliderFSM.period: 0,
+            SliderFSM.period_n: 0,
             SliderFSM.ns: ns
         })
     else:
@@ -131,7 +132,7 @@ async def slider_move_handler(callback: CallbackQuery, state: FSMContext):
     bot_msg = data[SliderFSM.msg]
     title = data[SliderFSM.title]
     period_func = data[SliderFSM.period_func]
-    period_n = data[SliderFSM.period]
+    period_n = data[SliderFSM.period_n]
     ns = data[SliderFSM.ns]
     
     period_n += int(callback.data.split(" ")[-1])
@@ -148,7 +149,7 @@ async def slider_move_handler(callback: CallbackQuery, state: FSMContext):
     
     await state.update_data({
         SliderFSM.msg: bot_msg,
-        SliderFSM.period: period_n,
+        SliderFSM.period_n: period_n,
     })
     
 
@@ -157,16 +158,22 @@ async def slider_move_handler(callback: CallbackQuery, state: FSMContext):
 async def slider_load_handler(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     bot_msg = data[SliderFSM.msg]
-    title = data[SliderFSM.title]
     period_func = data[SliderFSM.period_func]
-    period_n = data[SliderFSM.period]
+    period_n = data[SliderFSM.period_n]
     ns = data[SliderFSM.ns]
     obj_func = data[SliderFSM.obj_func]
+    cache = data[SliderFSM.cache]
     
-    period = await period_func(ns, period_n)
-    obj = await obj_func(ns, period[0], period[1])
-
-    if bot_msg.html_text != str(obj):
+    obj = cache.get(period_n, None)
+    
+    if not obj:
+        period = await period_func(ns, period_n)
+        obj = await obj_func(ns, period[0], period[1])
+        
+        cache[period_n] = str(obj)
+        await state.update_data({SliderFSM.cache: cache})
+    
+    if bot_msg.html_text != str(obj) and obj:
         await bot_msg.edit_text(
             text=str(obj),
             reply_markup=bot_msg.reply_markup

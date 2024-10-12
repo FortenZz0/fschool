@@ -45,9 +45,9 @@ class SliderFSM(StatesGroup):
     obj = State() # MyDiary / MyMarks / ...
     obj_func = State() # Callable
     period_func = State() # Callable
-    period = State() # int
+    period_n = State() # int
     txt_template = State() # str
     ns = State() # NetSchoolApi,
     wait_period = State() # wait period msg
-    # empty = State()
+    cache = State() # {period_n: str(obj)}
 
