@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from netschoolapi import NetSchoolAPI
 
 from handlers import database, files, keyboards, calendar
-from handlers.login import ns_login, get_admin
+from handlers.login import ns_login, get_user
 from handlers.fsm import *
 
 from typing import Callable, Any
@@ -23,11 +23,11 @@ def format_template(title: str, period: Any) -> str:
     
     x = "на" if title == settings["buttons"]["reply"]["diary"] else "за"
     
-    if len(period) == 2:
+    if period[0] == period[1]:
         return settings["txt"]["slider_header_day"].format(
             title,
             x,
-            *period
+            *period[1:]
         )
     elif isinstance(period[-1], int):
         return settings["txt"]["slider_header_week"].format(
@@ -73,10 +73,12 @@ async def start_get_period(msg: Message, state: FSMContext, title: str, is_short
 
 @router.callback_query(F.data.split(" ")[0] == "period")
 async def get_period_func_handler(callback: CallbackQuery, state: FSMContext):
+    user_period = get_user(callback.from_user.username)[5]
+    
     period_funcs = {
         "day": calendar.get_day,
         "week": calendar.get_week,
-        "cycle": calendar.get_cycle
+        "cycle": lambda x, y: calendar.get_cycle(x, user_period, y)
     }
     
     period = callback.data.split(" ")[1]
@@ -102,8 +104,8 @@ async def new_slider(state: FSMContext):
         period = await period_func(ns)
         
         template = format_template(title, period)
-        
-        kb_name = "slider_cycle" if isinstance(period[-1], str) and len(period) == 3 else "slider"
+        print(period)
+        kb_name = "slider" if period[0] == period[1] else "slider_cycle"
         kb = keyboards.get_inline(kb_name)
         
         await bot_msg.edit_text(
@@ -148,3 +150,24 @@ async def slider_move_handler(callback: CallbackQuery, state: FSMContext):
         SliderFSM.msg: bot_msg,
         SliderFSM.period: period_n,
     })
+    
+
+# Загрузка данных из слайдера
+@router.callback_query(F.data == "slider_load")
+async def slider_load_handler(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    bot_msg = data[SliderFSM.msg]
+    title = data[SliderFSM.title]
+    period_func = data[SliderFSM.period_func]
+    period_n = data[SliderFSM.period]
+    ns = data[SliderFSM.ns]
+    obj_func = data[SliderFSM.obj_func]
+    
+    period = await period_func(ns, period_n)
+    obj = await obj_func(ns, period[0], period[1])
+
+    if bot_msg.html_text != str(obj):
+        await bot_msg.edit_text(
+            text=str(obj),
+            reply_markup=bot_msg.reply_markup
+        )

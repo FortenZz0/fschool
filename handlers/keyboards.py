@@ -50,17 +50,17 @@ def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKe
             InlineKeyboardButton(text=btn["back"], callback_data=f"admin_target back")] # table
         ],
         "slider_cycle": [
-            [InlineKeyboardButton(text=btn["load"], callback_data="slider_cmd load")],
+            [InlineKeyboardButton(text=btn["load"], callback_data="slider_load")],
             [InlineKeyboardButton(text=btn["prev"], callback_data="slider_move -1"),
             InlineKeyboardButton(text=btn["next"], callback_data="slider_move 1")]
         ],
         "slider": [
-            [InlineKeyboardButton(text=btn["load"], callback_data="slider_cmd load")],
+            [InlineKeyboardButton(text=btn["load"], callback_data="slider_load")],
             [
-                InlineKeyboardButton(text=btn["prev_n"].format("5"), callback_data="slider_move -5"),
+                InlineKeyboardButton(text=btn["prev_n"].format("7"), callback_data="slider_move -7"),
                 InlineKeyboardButton(text=btn["prev_n"].format("1"), callback_data="slider_move -1"),
                 InlineKeyboardButton(text=btn["next_n"].format("1"), callback_data="slider_move 1"),
-                InlineKeyboardButton(text=btn["next_n"].format("5"), callback_data="slider_move 5")
+                InlineKeyboardButton(text=btn["next_n"].format("7"), callback_data="slider_move 7")
             ]
         ],
         "period": [

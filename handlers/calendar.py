@@ -51,13 +51,12 @@ async def get_now(ns: NetSchoolAPI) -> datetime:
 
 
 async def get_day(ns: NetSchoolAPI,
-                  add_days: int = 0) -> tuple[date, str]:
+                  add_days: int = 0) -> tuple[date, date, str]:
     """Получение даты с учётом часового пояса юзера
 
     Args:
         ns (NetSchoolAPI): объект NSAPI
         add_days (int, optional): Сколько дней нужно добавить к текущей дате. Defaults to 0.
-        skip_sunday (bool, optional): Переход на следующий день в воскресенье. Defaults to True.
 
     Returns:
         date: Дата с учётом часового пояса юзера
@@ -92,7 +91,7 @@ async def get_day(ns: NetSchoolAPI,
     #         if delta_date.weekday() == 6:
     #             new_now += timedelta(days=1)
     
-    return new_now.date(), week_days[new_now.weekday()]
+    return new_now.date(), new_now.date(), week_days[new_now.weekday()]
 
 
 async def get_week(ns: NetSchoolAPI,
@@ -102,13 +101,12 @@ async def get_week(ns: NetSchoolAPI,
     Args:
         ns (NetSchoolAPI): объект NSAPI
         add_weeks (int, optional): Сколько недель нужно добавить к текущей дате. Defaults to 0.
-        skip_sunday (bool, optional): Переход на следующий день в воскресенье. Defaults to True.
 
     Returns:
         tuple[date, date]: Дата начала недели (понедельник) и дата конца недели (суббота)
     """
     
-    today = await get_day(ns)
+    today = (await get_day(ns))[0]
     
     days_to_week_start = today.weekday()
     days_to_week_end = 6 - today.weekday() - 1
@@ -137,7 +135,7 @@ async def get_cycle(ns: NetSchoolAPI,
     
     cycles = files.get_settings()["schooldays"][cycle_type]
     
-    today = await get_day(ns, skip_sunday=False)
+    today = (await get_day(ns))[0]
     current_cycle = 0
     
     for i, cycle in enumerate(cycles):

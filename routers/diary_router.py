@@ -24,5 +24,5 @@ async def message_handler(msg: Message, state: FSMContext):
         msg,
         state,
         txt,
-        diary.get_week_diary
+        diary.get_diary
     )
