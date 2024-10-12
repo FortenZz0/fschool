@@ -49,10 +49,33 @@ def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKe
             [InlineKeyboardButton(text=btn["admin_set_self_target"], callback_data=f"admin_target set_self"), # table, username
             InlineKeyboardButton(text=btn["back"], callback_data=f"admin_target back")] # table
         ],
-        "slider": [
+        "slider_cycle": [
             [InlineKeyboardButton(text=btn["load"], callback_data="slider_cmd load")],
             [InlineKeyboardButton(text=btn["prev"], callback_data="slider_move -1"),
             InlineKeyboardButton(text=btn["next"], callback_data="slider_move 1")]
+        ],
+        "slider": [
+            [InlineKeyboardButton(text=btn["load"], callback_data="slider_cmd load")],
+            [
+                InlineKeyboardButton(text=btn["prev_n"].format("5"), callback_data="slider_move -5"),
+                InlineKeyboardButton(text=btn["prev_n"].format("1"), callback_data="slider_move -1"),
+                InlineKeyboardButton(text=btn["next_n"].format("1"), callback_data="slider_move 1"),
+                InlineKeyboardButton(text=btn["next_n"].format("5"), callback_data="slider_move 5")
+            ]
+        ],
+        "period": [
+            [
+                InlineKeyboardButton(text=btn["day_period"], callback_data="period day"),
+                InlineKeyboardButton(text=btn["week_period"], callback_data="period week")
+            ],
+            [InlineKeyboardButton(text=btn["cycle_period"], callback_data="period cycle")]
+        ],
+        
+        "period_short": [
+            [
+                InlineKeyboardButton(text=btn["day_period"], callback_data="period day"),
+                InlineKeyboardButton(text=btn["week_period"], callback_data="period week")
+            ]
         ]
     }
     

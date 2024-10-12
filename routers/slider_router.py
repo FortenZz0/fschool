@@ -6,10 +6,11 @@ from aiogram.fsm.context import FSMContext
 from netschoolapi import NetSchoolAPI
 
 from handlers import database, files, keyboards, calendar
-from handlers.login import ns_login
+from handlers.login import ns_login, get_admin
 from handlers.fsm import *
 
 from typing import Callable, Any
+from datetime import date
 
 
 
@@ -18,58 +19,107 @@ db = database.DB()
 
 
 def format_template(title: str, period: Any) -> str:
-    settings = files.get_settings()["txt"]
+    settings = files.get_settings()
     
-    if len(list(period)) == 1:
-        return settings["slider_header_day"].format(
+    x = "на" if title == settings["buttons"]["reply"]["diary"] else "за"
+    
+    if len(period) == 2:
+        return settings["txt"]["slider_header_day"].format(
             title,
-            period
+            x,
+            *period
         )
     elif isinstance(period[-1], int):
-        return settings["slider_header_week"].format(
+        return settings["txt"]["slider_header_week"].format(
             title,
+            x,
             *period
         )
     else:
-        return settings["slider_header_cycle"].format(
+        return settings["txt"]["slider_header_cycle"].format(
             title,
+            x,
             *period
         )
     
 
+async def create_slider(msg: Message,
+                        state: FSMContext,
+                        title: str,
+                        obj_func: Callable):
+    settings = files.get_settings()
+    
+    await state.set_data({
+        SliderFSM.title: title,
+        SliderFSM.obj_func: obj_func
+    })
+    
+    await start_get_period(msg, state, title, title == settings["buttons"]["reply"]["diary"])
+
+
+async def start_get_period(msg: Message, state: FSMContext, title: str, is_short: bool = False):
+    template = files.get_settings()["txt"]["get_period"]
+    
+    kb_name = "period_short" if is_short else "period"
+    kb = keyboards.get_inline(kb_name)
+    
+    bot_msg = await msg.answer(
+        text=template.format(title),
+        reply_markup=kb
+    )
+    
+    await state.update_data({SliderFSM.msg: bot_msg})
+    
+
+@router.callback_query(F.data.split(" ")[0] == "period")
+async def get_period_func_handler(callback: CallbackQuery, state: FSMContext):
+    period_funcs = {
+        "day": calendar.get_day,
+        "week": calendar.get_week,
+        "cycle": calendar.get_cycle
+    }
+    
+    period = callback.data.split(" ")[1]
+    
+    await state.update_data({
+        SliderFSM.period_func: period_funcs[period]
+    })
+    
+    await new_slider(state)
+    
 
 # @router.message()
-async def new_slider(msg: Message,
-                     state: FSMContext,
-                     title: str,
-                     obj_func: Callable,
-                     period_func: Callable):
+async def new_slider(state: FSMContext):
+    data = await state.get_data()
+    bot_msg = data[SliderFSM.msg]
+    period_func = data[SliderFSM.period_func]
+    title = data[SliderFSM.title]
+    # obj_func = data[SliderFSM.obj_func]
     
-    ns = await ns_login(tg_username=msg.from_user.username)
+    ns = await ns_login(tg_username=bot_msg.chat.username)
     
     if ns:
         period = await period_func(ns)
         
         template = format_template(title, period)
-        kb = keyboards.get_inline("slider")
         
-        bot_msg = await msg.answer(
+        kb_name = "slider_cycle" if isinstance(period[-1], str) and len(period) == 3 else "slider"
+        kb = keyboards.get_inline(kb_name)
+        
+        await bot_msg.edit_text(
             text=template,
             reply_markup=kb
         )
         
-        await state.set_data({
-            SliderFSM.msg: bot_msg,
-            SliderFSM.title: title,
-            SliderFSM.obj_func: obj_func,
-            SliderFSM.period_func: period_func,
+        await state.update_data({
             SliderFSM.period: 0,
             SliderFSM.ns: ns
         })
     else:
         err = files.get_settings()["txt"]["connection_error"]
         
-        await msg.answer(err)
+        await bot_msg.edit_text(text=err)
+
 
 
 # Изменение периода
