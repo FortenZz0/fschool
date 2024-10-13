@@ -29,20 +29,18 @@ async def get_diary(ns: NetSchoolAPI,
 
 
 async def get_day_diary(ns: NetSchoolAPI,
-                        add_days: int = 0,
-                        skip_sunday: bool = True) -> schemas.MyDiary | None:
+                        add_days: int = 0) -> schemas.MyDiary | None:
     """Получение дневника на день
 
     Args:
         ns (NetSchoolAPI): Объект NetSchoolAPI
         add_days (int, optional): Сколько дней нужно добавить к дате дневника. Defaults to 0.
-        skip_sunday (bool, optional): Пропускать ли воскресенье. Defaults to True.
 
     Returns:
         MyDiary | None: Дневник на день
     """
     
-    now = await calendar.get_day(ns, add_days, skip_sunday)
+    now, _, _ = await calendar.get_day(ns, add_days)
     
     diary = await get_diary(ns, now, now)
     
@@ -50,20 +48,18 @@ async def get_day_diary(ns: NetSchoolAPI,
 
 
 async def get_week_diary(ns: NetSchoolAPI,
-                         add_weeks: int = 0,
-                         skip_sunday: bool = True) -> schemas.MyDiary | None:
+                         add_weeks: int = 0) -> schemas.MyDiary | None:
     """Получение дневника на неделю
 
     Args:
         ns (NetSchoolAPI): Объект NetSchoolAPI
         add_days (int, optional): Сколько дней нужно добавить к неделе дневника. Defaults to 0.
-        skip_sunday (bool, optional): Пропускать ли воскресенье. Defaults to True.
 
     Returns:
         MyDiary | None: Дневник на день
     """
     
-    start, end = await calendar.get_week(ns, add_weeks, skip_sunday)
+    start, end, _ = await calendar.get_week(ns, add_weeks)
     
     diary = await get_diary(ns, start, end)
     

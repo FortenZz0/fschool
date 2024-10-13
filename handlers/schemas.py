@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from netschoolapi.schemas import Diary, Day, Lesson, Assignment
 from datetime import date, time, datetime
 from typing import Any, Iterable
@@ -141,19 +140,23 @@ class MyLesson(MySchema):
     def __str__(self):
         templates = files.get_settings()["schemas"]
         
-        res = [templates["lesson"].format(
-            self.number,
-            self.subject,
-            self.start,
-            self.end
-        )]
-        
         marks = self.get_marks()
         if marks:
-            res.append(templates["lesson_marks"].format(
+            res = [templates["lesson_with_marks"].format(
+                self.number,
+                self.subject,
+                ":".join(str(self.start).split(":")[:2]),
+                ":".join(str(self.end).split(":")[:2]),
                 ", ".join(list(map(str, marks))),
                 str(round(sum(marks) / len(marks), 2))
-            ))
+            )]
+        else:
+            res = [templates["lesson"].format(
+                self.number,
+                self.subject,
+                ":".join(str(self.start).split(":")[:2]),
+                ":".join(str(self.end).split(":")[:2]),
+            )]
         
         for ass in self.assignments:
             res.append(str(ass))
@@ -178,13 +181,17 @@ class MyAssignment(MySchema):
     def __str__(self):
         templates = files.get_settings()["schemas"]
         
-        res = templates["assignment"].format(
-            self.type,
-            self.content
-        )
-        
         if self.mark:
-            res += templates["assignment_mark"].format(self.mark)
+            res = templates["assignment_with_mark"].format(
+                self.type,
+                self.mark,
+                self.content
+            )
+        else:
+            res = templates["assignment"].format(
+                self.type,
+                self.content
+            )
             
         return res
 

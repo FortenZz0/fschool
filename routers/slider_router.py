@@ -109,12 +109,13 @@ async def new_slider(state: FSMContext):
         kb_name = "slider" if period[0] == period[1] else "slider_cycle"
         kb = keyboards.get_inline(kb_name)
         
-        await bot_msg.edit_text(
+        bot_msg = await bot_msg.edit_text(
             text=template,
             reply_markup=kb
         )
         
         await state.update_data({
+            SliderFSM.msg: bot_msg,
             SliderFSM.period_n: 0,
             SliderFSM.ns: ns
         })
@@ -136,11 +137,12 @@ async def slider_move_handler(callback: CallbackQuery, state: FSMContext):
     ns = data[SliderFSM.ns]
     
     period_n += int(callback.data.split(" ")[-1])
-    
     new_period = await period_func(ns, period_n)
     
     template = format_template(title, new_period)
-    kb = keyboards.get_inline("slider")
+    
+    kb_name = "slider" if new_period[0] == new_period[1] else "slider_cycle"
+    kb = keyboards.get_inline(kb_name)
     
     bot_msg = await bot_msg.edit_text(
         text=template,
@@ -174,7 +176,9 @@ async def slider_load_handler(callback: CallbackQuery, state: FSMContext):
         await state.update_data({SliderFSM.cache: cache})
     
     if bot_msg.html_text != str(obj) and obj:
-        await bot_msg.edit_text(
+        bot_msg = await bot_msg.edit_text(
             text=str(obj),
             reply_markup=bot_msg.reply_markup
         )
+        
+        await state.update_data({SliderFSM.msg: bot_msg})
