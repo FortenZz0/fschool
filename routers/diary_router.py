@@ -17,7 +17,7 @@ db = database.DB()
 
 
 @router.message(F.text.lower() == files.get_settings()["buttons"]["reply"]["diary"].lower())
-async def message_handler(msg: Message, state: FSMContext):
+async def diary_handler(msg: Message, state: FSMContext):
     txt = files.get_settings()["buttons"]["reply"]["diary"]
     
     await create_slider(

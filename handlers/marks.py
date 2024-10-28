@@ -9,17 +9,18 @@ from handlers import files, calendar, schemas, diary
 
 
 
-def get_marks(diary: schemas.MyDiary) -> schemas.MyMarks:
+def get_marks(diary: schemas.MyDiary, period_title: str) -> schemas.MyMarks:
     """Преобразует объект дневника MyDiary в объект MyMarks
 
     Args:
         diary (MyDiary): Объект дневника
+        period_title (str): Имя периода
 
     Returns:
         MyMarks: Объект оценок
     """
     
-    return schemas.MyMarks(diary)
+    return schemas.MyMarks(diary, period_title)
 
 
 async def get_day_marks(ns: NetSchoolAPI,

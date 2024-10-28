@@ -79,7 +79,7 @@ async def get_period_func_handler(callback: CallbackQuery, state: FSMContext):
     period_funcs = {
         "day": calendar.get_day,
         "week": calendar.get_week,
-        "cycle": lambda x, y: calendar.get_cycle(x, user_period, y)
+        "cycle": lambda ns, add_cycles: calendar.get_cycle(ns, user_period, add_cycles)
     }
     
     period = callback.data.split(" ")[1]
@@ -102,7 +102,7 @@ async def new_slider(state: FSMContext):
     ns = await ns_login(tg_username=bot_msg.chat.username)
     
     if ns:
-        period = await period_func(ns)
+        period = await period_func(ns, 0)
         
         template = format_template(title, period)
         
@@ -117,6 +117,7 @@ async def new_slider(state: FSMContext):
         await state.update_data({
             SliderFSM.msg: bot_msg,
             SliderFSM.period_n: 0,
+            SliderFSM.period_title: str(period[-1]),
             SliderFSM.ns: ns
         })
     else:
@@ -152,6 +153,7 @@ async def slider_move_handler(callback: CallbackQuery, state: FSMContext):
     await state.update_data({
         SliderFSM.msg: bot_msg,
         SliderFSM.period_n: period_n,
+        SliderFSM.period_title: str(new_period[-1])
     })
     
 
@@ -162,6 +164,7 @@ async def slider_load_handler(callback: CallbackQuery, state: FSMContext):
     bot_msg = data[SliderFSM.msg]
     period_func = data[SliderFSM.period_func]
     period_n = data[SliderFSM.period_n]
+    period_title = data[SliderFSM.period_title]
     ns = data[SliderFSM.ns]
     obj_func = data[SliderFSM.obj_func]
     cache = data[SliderFSM.cache]
@@ -170,7 +173,7 @@ async def slider_load_handler(callback: CallbackQuery, state: FSMContext):
     
     if not obj:
         period = await period_func(ns, period_n)
-        obj = await obj_func(ns, period[0], period[1])
+        obj = await obj_func(ns, period[0], period[1], period_title)
         
         cache[period_n] = str(obj)
         await state.update_data({SliderFSM.cache: cache})

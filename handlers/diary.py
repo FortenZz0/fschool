@@ -11,13 +11,15 @@ from handlers import files, calendar, schemas
 
 async def get_diary(ns: NetSchoolAPI,
                     start: date,
-                    end: date) -> schemas.MyDiary | None:
+                    end: date,
+                    period_name: str) -> schemas.MyDiary | None:
     """Получение дневника за определённый период
 
     Args:
         ns (NetSchoolAPI): Объект NetSchoolAPI
         start (date): Начало периода
         end (date): Конец периода
+        period_name (str): Название периода
 
     Returns:
         MyDiary | None: Дневник за период
@@ -25,7 +27,7 @@ async def get_diary(ns: NetSchoolAPI,
     
     diary = await ns.diary(start, end)
     
-    return schemas.MyDiary(diary)
+    return schemas.MyDiary(diary, period_name)
 
 
 async def get_day_diary(ns: NetSchoolAPI,

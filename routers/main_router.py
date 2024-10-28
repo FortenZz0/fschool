@@ -30,5 +30,4 @@ async def start_handler(msg: Message, state: FSMContext):
         reply_markup=kb
     )
     
-    print(123)
     await start_login_handler(msg, state)

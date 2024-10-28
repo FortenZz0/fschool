@@ -19,11 +19,13 @@ class MySchema:
 
 
 class MyDiary(MySchema):
-    def __init__(self, source: Diary):
+    def __init__(self, source: Diary, period_title: str):
         super().__init__(source)
         
         self.days = [MyDay(day) for day in self._source.schedule]
         self.days.sort(key=lambda x: x.date)
+        
+        self.period_title = period_title
         
         self.start: date = self._source.start
         self.end: date = self._source.end
@@ -36,12 +38,14 @@ class MyDiary(MySchema):
         
         if self.start == self.end or len(self.days) == 1:
             res.append(templates["diary_header_one_day"].format(
-                self.start
+                self.start,
+                self.period_title
             ))
         else:
             res.append(templates["diary_header"].format(
                 self.start,
-                self.end
+                self.end,
+                self.period_title
             ))
             
         for day in self.days:
@@ -198,8 +202,10 @@ class MyAssignment(MySchema):
 
 
 class MyMarks(MySchema):
-    def __init__(self, source: MyDiary):
+    def __init__(self, source: MyDiary, period_title):
         super().__init__(source)
+        
+        self.period_title = period_title
         
         self.extend_subjects = ["Разговоры о важном"]
         
@@ -235,9 +241,11 @@ class MyMarks(MySchema):
                             res[les.subject].append(mark)
                         else:
                             res[les.subject] = [mark]
-                        
-        
-        res_2 = sorted(res.items(), key=lambda x: x[0])
+
+        if self._source.start == self._source.end:
+            res_2 = res.items()
+        else:
+            res_2 = sorted(res.items(), key=lambda x: x[0])
         
         for i in res_2:
             subj, marks = i
@@ -256,7 +264,6 @@ class MyMarks(MySchema):
         res = []
         
         for v in self.marks_obj.values():
-            v.sort(key=lambda x: x.mark, reverse=True)
             res.extend(v)
             
         res.sort(key=lambda x: x.date)
@@ -277,17 +284,18 @@ class MyMarks(MySchema):
     
     def __str__(self):
         templates = files.get_settings()["schemas"]
-        
         res = []
         
         if self._source.start == self._source.end:
             res.append(templates["all_marks_header_one_day"].format(
-                self._source.start
+                self._source.start,
+                self.period_title
             ))
         else:
             res.append(templates["all_marks_header"].format(
                 self._source.start,
-                self._source.end
+                self._source.end,
+                self.period_title + (" неделю" if (self.end - self.start).days == 5 else "")
             ))
         
         for i, item in enumerate(self.marks_obj.items()):
@@ -305,6 +313,10 @@ class MyMarks(MySchema):
             for mark in marks:
                 res.append(str(mark))
         
+                
+        if l := len(self.marks): # l != 0
+            s = sum(list(map(lambda x: x.mark, self.marks))) / l
+            res.append(f"\n--------------------\nОбщий средний балл: <b><i>~{s:.2}</i></b>")
             
         return "\n".join(res)
     
