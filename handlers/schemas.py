@@ -14,7 +14,7 @@ class MySchema:
         return self._source
     
     def __repr__(self):
-        return self.get_source()
+        return str(self.get_source())
 
 
 

@@ -3,13 +3,15 @@ from netschoolapi import NetSchoolAPI
 from timezonefinder import TimezoneFinder
 from netschoolapi.schemas import Lesson
 from geopy import geocoders
+import geocoder
 import asyncio
 
 from handlers import files
 
 
 
-geo = geocoders.Yandex("3dd22f85-15b3-4db6-8fbc-04dcb63a878e")
+# geo = geocoders.GeoNames("fortenzz")
+geo = geocoders.Nominatim(user_agent="FortenZz")
 tf = TimezoneFinder()
 
 tz_convert = {
@@ -27,6 +29,17 @@ tz_convert = {
 }
 
 
+def filter_school_address(address: str) -> str:
+    exclude = [
+        "г.",
+        "ул.",
+        "д."
+    ]
+    
+    addr = " ".join(list(filter(lambda x: x not in exclude, address[:].split(" ")))[1:])
+
+    return "Россия " + addr.replace(",", "")
+
 
 async def get_now(ns: NetSchoolAPI) -> datetime:    
     """Получение текущего времени с учётом часового пояса юзера
@@ -39,7 +52,7 @@ async def get_now(ns: NetSchoolAPI) -> datetime:
     """
     
     info = await ns.school()
-    addr = info.address
+    addr = filter_school_address(info.address)
     
     loc = geo.geocode(addr)
     tz_name = tf.timezone_at(lng=loc.longitude, lat=loc.latitude)
@@ -74,22 +87,6 @@ async def get_day(ns: NetSchoolAPI,
     
     now = await get_now(ns)
     new_now = now + timedelta(days=add_days)
-    
-    # if skip_sunday and new_now.weekday() == 6:
-    #     add_delta = timedelta(days=1)
-        
-    #     new_now += add_delta
-
-    #     y_new_now = new_now.timetuple().tm_yday
-    #     y_now = now.timetuple().tm_yday
-        
-    #     delta = abs(y_new_now - y_now)
-        
-    #     for d in range(1, delta + 1):
-    #         delta_date = now + add_delta * (d if y_new_now >= y_now else -d)
-            
-    #         if delta_date.weekday() == 6:
-    #             new_now += timedelta(days=1)
     
     return new_now.date(), new_now.date(), week_days[new_now.weekday()]
 

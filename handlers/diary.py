@@ -12,7 +12,7 @@ from handlers import files, calendar, schemas
 async def get_diary(ns: NetSchoolAPI,
                     start: date,
                     end: date,
-                    period_name: str) -> schemas.MyDiary | None:
+                    period_name: str) -> schemas.MyDiary:
     """Получение дневника за определённый период
 
     Args:
