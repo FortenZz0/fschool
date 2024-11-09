@@ -23,3 +23,5 @@ async def time_handler(msg: Message):
     s = await get_time.generate_time_str(ns)
     
     await bot_msg.edit_text(s)
+    
+    await ns.logout()

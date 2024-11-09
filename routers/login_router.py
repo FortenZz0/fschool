@@ -146,6 +146,7 @@ async def try_login(state: FSMContext, username: str):
         await login_msg.delete()
         
         await state.clear()
+        await ns.logout()
     else:
         await login_msg.edit_text(
             settings["txt"]["login_error"],
