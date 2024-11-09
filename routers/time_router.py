@@ -16,8 +16,10 @@ db = database.DB()
 
 @router.message(F.text.lower() == files.get_settings()["buttons"]["reply"]["time"].lower())
 async def time_handler(msg: Message):
-    ns = await login.ns_login(tg_username=msg.from_user.username)
+    wait_s = files.get_settings()["txt"]["wait"]
+    bot_msg = await msg.answer(wait_s)
     
+    ns = await login.ns_login(tg_username=msg.from_user.username)
     s = await get_time.generate_time_str(ns)
     
-    await msg.answer(s)
+    await bot_msg.edit_text(s)
