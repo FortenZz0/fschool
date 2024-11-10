@@ -14,19 +14,19 @@ from .database import DB
 db = DB()
 
 
-def _get_dhms_from_timedelta(td: timedelta) -> tuple[int, int, int]:
-    d = td.days
-    h = td.seconds // 3600
-    m = (td.seconds - h * 3600) // 60
-    s = td.seconds - h * 3600 - m * 60
+def _get_dhms_from_seconds(s: float) -> tuple[int, int, int]:
+    d = s // (24 * 3600)
+    h = (s - d * 24 * 3600) // 3600
+    m = (s - d * 24 * 3600 - h * 3600) // 60
+    s = s - d * 24 * 3600 - h * 3600 - m * 60
     
-    return d, h, m, s
+    return tuple(map(int, [d, h, m, s]))
 
-def _get_format_dhms(td: timedelta) -> str:
+def _get_format_dhms(s: float) -> str:
     time_format = get_settings()["txt"]["time_format"]
     
-    dhms = _get_dhms_from_timedelta(td)
-    
+    dhms = _get_dhms_from_seconds(s)
+    print(dhms)
     res = []
     chars = "dhms"
     
@@ -37,11 +37,23 @@ def _get_format_dhms(td: timedelta) -> str:
     return " ".join(res)
 
 
-def get_delta(t1: time, t2: time) -> timedelta:
-    dt1 = datetime(1, 1, 1, t1.hour, t1.minute, t1.second)
-    dt2 = datetime(1, 1, 1, t2.hour, t2.minute, t2.second)
+def get_delta(t1: time | datetime, t2: time | datetime) -> timedelta:
+    if not isinstance(t1, datetime):
+        dt1 = datetime(1, 1, 1, t1.hour, t1.minute, t1.second)
+    else:
+        dt1 = t1
+        
+    if not isinstance(t2, datetime):
+        dt2 = datetime(1, 1, 1, t2.hour, t2.minute, t2.second)
+    else:
+        dt2 = t2
     
-    return dt1 - dt2
+    dt1 = dt1.replace(tzinfo=None)
+    dt2 = dt2.replace(tzinfo=None)
+    
+    delta = abs(dt1.timestamp() - dt2.timestamp())
+    
+    return delta
 
 
 def _get_day_border(day: MyDay) -> tuple[None, None] | tuple[time, time]:
@@ -60,7 +72,7 @@ def _is_study_time(now: datetime, day: MyDay) -> None | bool:
     if not b:
         return None
     
-    return b[0] <= now.time() <= b[1]
+    return b[0] <= now.time() <= b[1] and now.date == day.date
 
 
 def _day_is_over(now: datetime, day: MyDay) -> None | bool:
@@ -103,10 +115,12 @@ def _get_inday_time_left(now: datetime, day: MyDay) -> str | None:
 def _get_outday_time_left(now: datetime, day: MyDay) -> str:
     txt = get_settings()["txt"]
     
-    time_delta = get_delta(now.time(), day.lessons[0].start)
-    days_delta = day.date - now.date()
+    les_d = day.lessons[0].date
+    les_t = day.lessons[0].start
     
-    delta = timedelta(days=days_delta.days, seconds=time_delta.seconds)
+    lesson_datetime = datetime.combine(les_d, les_t)
+    
+    delta = get_delta(now, lesson_datetime)
     
     res = [txt["now_subj"].format("уроков нет")]
     res.append(txt["day_time_left"].format("начала", _get_format_dhms(delta)))
@@ -131,9 +145,6 @@ async def generate_time_str(ns: NetSchoolAPI) -> str:
         return _get_inday_time_left(now, today)
         
     else:
-        check_day = today
-        
-        if _day_is_over(now, today):
-            check_day = next_day
+        check_day = next_day if _day_is_over(now, today) else today
             
         return _get_outday_time_left(now, check_day)
