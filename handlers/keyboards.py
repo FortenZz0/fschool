@@ -96,10 +96,10 @@ def get_reply(kb_type: str, is_admin: bool) -> ReplyKeyboardMarkup:
                 KeyboardButton(text=btn["time"]),
                 KeyboardButton(text=btn["school"])
             ],
-            [
-                KeyboardButton(text=btn["duty"]),
-                KeyboardButton(text=btn["ads"])
-            ],
+            # [
+            #     KeyboardButton(text=btn["duty"]),
+            #     KeyboardButton(text=btn["ads"])
+            # ],
             [
                 KeyboardButton(text=btn["settings"])
             ]
