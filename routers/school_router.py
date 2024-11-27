@@ -16,7 +16,7 @@ router = Router(name=__name__)
 db = database.DB()
 
 
-@router.message()
+@router.message(F.text.lower() == files.get_settings()["buttons"]["reply"]["admin"].lower())
 async def school_handler(msg: Message) -> None:
     ns = await ns_login(tg_username=msg.from_user.username)
     txt = files.get_settings()["txt"]
