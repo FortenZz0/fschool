@@ -19,6 +19,11 @@ class MySchema:
 
 
 class MyDiary(MySchema):
+    __slots__ = [
+        "_source", "days", "period_title",
+        "start", "end"
+    ]
+    
     def __init__(self, source: Diary, period_title: str):
         super().__init__(source)
         
@@ -57,6 +62,12 @@ class MyDiary(MySchema):
     
     
 class MyDay(MySchema):
+    __slots__ = [
+        "_source", "lessons", "date",
+        "weekday_n", "weekday", "start",
+        "end"
+    ]
+    
     def __init__(self, source: Day):
         super().__init__(source)
 
@@ -98,6 +109,12 @@ class MyDay(MySchema):
 
 
 class MyLesson(MySchema):
+    __slots__ = [
+        "_source", "date", "start",
+        "ebd", "room", "number",
+        "_subj", "assignments"
+    ]
+    
     def __init__(self, source: Lesson):
         super().__init__(source)
         
@@ -170,6 +187,12 @@ class MyLesson(MySchema):
 
 
 class MyAssignment(MySchema):
+    __slots__ = [
+        "_source", "id", "comment",
+        "type", "content", "mark",
+        "is_duty", "deadline"
+    ]
+    
     def __init__(self, source: Assignment):
         super().__init__(source)
         
@@ -202,6 +225,11 @@ class MyAssignment(MySchema):
 
 
 class MyMarks(MySchema):
+    __slots__ = [
+        "_source", "period_title", "start",
+        "end", "marks_obj", "marks"
+    ]
+    
     def __init__(self, source: MyDiary, period_title):
         super().__init__(source)
         
@@ -323,6 +351,11 @@ class MyMarks(MySchema):
         
 
 class MyMark(MySchema):
+    __slots__ = [
+        "_source", "id", "subject",
+        "date", "start", "end"
+    ]
+    
     def __init__(self, source: dict):
         super().__init__(source)
         
