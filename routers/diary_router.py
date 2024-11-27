@@ -1,5 +1,5 @@
 from aiogram import types, F, Router, html
-from aiogram.types import Message
+from aiogram.types import Message, BufferedInputFile
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 

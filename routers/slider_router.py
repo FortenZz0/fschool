@@ -1,5 +1,5 @@
 from aiogram import types, F, Router, html
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, BufferedInputFile
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
@@ -11,6 +11,8 @@ from handlers.fsm import *
 
 from typing import Callable, Any
 from datetime import date
+
+from handlers.schemas import MyDiary
 
 
 
@@ -170,6 +172,7 @@ async def slider_load_handler(callback: CallbackQuery, state: FSMContext):
     cache = data[SliderFSM.cache]
     
     obj = cache.get(period_n, None)
+    files = []
     
     if not obj:
         period = await period_func(ns, period_n)
@@ -177,11 +180,22 @@ async def slider_load_handler(callback: CallbackQuery, state: FSMContext):
         
         cache[period_n] = str(obj)
         await state.update_data({SliderFSM.cache: cache})
+        
+        if isinstance(obj, MyDiary):
+            attachments = await obj.get_attachments(ns)
+            
+            for att in attachments:
+                buffer = await att.download(ns)
+                f = BufferedInputFile(buffer.getvalue(), att.fname)
+                files.append(f)
     
     if bot_msg.html_text != str(obj) and obj:
         bot_msg = await bot_msg.edit_text(
             text=str(obj),
             reply_markup=bot_msg.reply_markup
         )
+        
+        for f in files:
+            await bot_msg.answer_document(f)
         
         await state.update_data({SliderFSM.msg: bot_msg})

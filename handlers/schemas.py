@@ -1,6 +1,8 @@
+from netschoolapi import NetSchoolAPI
 from netschoolapi.schemas import Diary, Day, Lesson, Assignment
 from datetime import date, time, datetime
 from typing import Any, Iterable
+from io import BytesIO
 
 from handlers import files
 
@@ -34,6 +36,29 @@ class MyDiary(MySchema):
         
         self.start: date = self._source.start
         self.end: date = self._source.end
+    
+    
+    async def get_attachments(self, ns: NetSchoolAPI):
+        res = []
+        
+        temp = {}
+        
+        for day in self.days:
+            for less in day.lessons:
+                for ass in less.assignments:
+                    attachments = await ns.attachments(ass.id)
+                    for att in attachments:
+                        n = temp.get(less.subject, 0)
+                        temp.update({less.subject: n+1})
+                        
+                        res.append(MyAttachment(
+                            att,
+                            less.subject.replace(" ", "-"),
+                            str(less.date),
+                            n
+                        ))
+        
+        return res
         
         
     def __str__(self):
@@ -111,7 +136,7 @@ class MyDay(MySchema):
 class MyLesson(MySchema):
     __slots__ = [
         "_source", "date", "start",
-        "ebd", "room", "number",
+        "end", "room", "number",
         "_subj", "assignments"
     ]
     
@@ -192,7 +217,7 @@ class MyAssignment(MySchema):
         "type", "content", "mark",
         "is_duty", "deadline"
     ]
-    
+
     def __init__(self, source: Assignment):
         super().__init__(source)
         
@@ -380,3 +405,65 @@ class MyMark(MySchema):
         
     def __repr__(self):
         return str(self.get_source())
+    
+    
+
+class MyAttachment(MySchema):
+    __slots__ = [
+        "_source", "id",
+        "name", "desc"
+    ]
+    
+    def __init__(self, obj,
+                 lesson_name: str | None = None,
+                 lesson_date: str | None = None,
+                 attachment_n: int | None = None):
+        super().__init__(obj)
+        
+        self.id: str = self._source.id
+        self.name: str = self._source.name
+        self.desc: str = self._source.description
+        
+        self._lesson_name = lesson_name
+        self._lesson_date = lesson_date
+        self._attachment_n = attachment_n
+    
+
+    @property
+    def fname(self, lesson_name: str | None = None,
+                    lesson_date: str | None = None,
+                    attachment_n: int | None = None) -> str:
+        
+        assert self._lesson_name is None or lesson_name is None
+        assert self._lesson_date is None or lesson_date is None
+        assert self._attachment_n is None or attachment_n is None
+        
+        name = self._lesson_name if lesson_name is None else lesson_name
+        date = self._lesson_date if lesson_date is None else lesson_date
+        n = self._attachment_n if attachment_n is None else attachment_n
+        
+        template = files.get_settings()["txt"]["attachment_name"]
+        
+        return template.format(
+            name,
+            date,
+            n,
+            self.name.split(".")[-1]
+        )
+        
+        
+    async def download(self, ns: NetSchoolAPI) -> BytesIO:
+        buffer = BytesIO()
+        await ns.download_attachment(self.id, buffer)
+        
+        return buffer
+    
+    
+"""
+A B !A !AvB
+0 0  1   1
+0 1  1   1
+1 0  0   0
+1 1  0   1
+"""
+        
