@@ -22,7 +22,7 @@ jobs:
               uses: milanmk/actions-file-deployer@master
               with:
                 remote-protocol: "sftp"
-                remote-host: "31.129.57.185"
+                remote-host: "89.223.31.54"
                 remote-user: "root"
                 ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
                 remote-path: "/root/fschool"
