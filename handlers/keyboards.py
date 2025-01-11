@@ -93,23 +93,21 @@ def get_reply(kb_type: str, is_admin: bool) -> ReplyKeyboardMarkup:
                 KeyboardButton(text=btn["marks"])
             ],
             [
-                KeyboardButton(text=btn["time"]),
-                KeyboardButton(text=btn["school"])
+                # KeyboardButton(text=btn["time"]),
+                KeyboardButton(text=btn["school"]),
+                KeyboardButton(text=btn["settings"])
             ],
             # [
             #     KeyboardButton(text=btn["duty"]),
             #     KeyboardButton(text=btn["ads"])
             # ],
-            [
-                KeyboardButton(text=btn["settings"])
-            ]
         ]
     }
     
     m = markups[kb_type]
     
     if is_admin and kb_type in ["main"]:
-        m[-1].append(KeyboardButton(text=btn["admin"]))
+        m.append([KeyboardButton(text=btn["admin"])])
     
     keyboard = ReplyKeyboardMarkup(
         keyboard=m,

@@ -26,7 +26,6 @@ def _get_format_dhms(s: float) -> str:
     time_format = get_settings()["txt"]["time_format"]
     
     dhms = _get_dhms_from_seconds(s)
-    print(dhms)
     res = []
     chars = "dhms"
     
@@ -51,9 +50,10 @@ def get_delta(t1: time | datetime, t2: time | datetime) -> timedelta:
     dt1 = dt1.replace(tzinfo=None)
     dt2 = dt2.replace(tzinfo=None)
     
-    delta = abs(dt1.timestamp() - dt2.timestamp())
+    # delta = abs(dt1.timestamp() - dt2.timestamp())
+    delta = dt1 - dt2
     
-    return delta
+    return delta.total_seconds()
 
 
 def _get_day_border(day: MyDay) -> tuple[None, None] | tuple[time, time]:
@@ -72,7 +72,7 @@ def _is_study_time(now: datetime, day: MyDay) -> None | bool:
     if not b:
         return None
     
-    return b[0] <= now.time() <= b[1] and now.date == day.date
+    return b[0] <= now.time() <= b[1] and now.date() == day.date
 
 
 def _day_is_over(now: datetime, day: MyDay) -> None | bool:
@@ -130,8 +130,8 @@ def _get_outday_time_left(now: datetime, day: MyDay) -> str:
 
 
 async def generate_time_str(ns: NetSchoolAPI) -> str:
-    now = await get_now(ns)
-    # now = datetime(2024, 11, 8, 9, 14, 5)
+    # now = await get_now(ns)
+    now = datetime(2024, 12, 2, 9, 14, 5)
     
     db.execute("SELECT * FROM users WHERE login=? AND password=? AND school=?", ns._login_data)
     user = db.fetchone()

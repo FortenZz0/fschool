@@ -108,7 +108,7 @@ class MyDay(MySchema):
 
         self.lessons = [MyLesson(les) for les in self._source.lessons]
         
-        self.date: date = self._source.day
+        self.date: _Date = self._source.day
         self.weekday_n: int = self.date.weekday()
         self.weekday: str = self.WEEKDAYS[self.weekday_n]
         
@@ -157,7 +157,7 @@ class MyLesson(MySchema):
             "Русский язык": "Русский"
         }
 
-        self.date: date = self._source.day
+        self.date: _Date = self._source.day
         self.start: time = self._source.start
         self.end: time = self._source.end
         self.room: str = self._source.room
@@ -227,7 +227,7 @@ class MyAssignment(MySchema):
         self.content: str = self._source.content
         self.mark: int = self._source.mark
         self.is_duty: bool = self._source.is_duty
-        self.deadline: date = self._source.deadline
+        self.deadline: _Date = self._source.deadline
         
         
     def __str__(self):
@@ -262,8 +262,8 @@ class MyMarks(MySchema):
         
         self.extend_subjects = ["Разговоры о важном"]
         
-        self.start: date = source.start
-        self.end: date = source.end
+        self.start: _Date = source.start
+        self.end: _Date = source.end
         
         self.marks_obj = {}
         self.marks = []
@@ -386,7 +386,7 @@ class MyMark(MySchema):
         
         self.id: int = source["id"]
         self.subject: str = source["subject"]
-        self.date: date = source["date"]
+        self.date: _Date = source["date"]
         self.type: str = source["type"]
         self.mark: int = source["mark"]
         
