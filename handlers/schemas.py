@@ -1,5 +1,6 @@
 from netschoolapi import NetSchoolAPI
 from netschoolapi.schemas import Diary, Day, Lesson, Assignment
+from aiogram.utils import formatting
 from datetime import date, time, datetime
 from typing import Any, Iterable
 from io import BytesIO
@@ -384,6 +385,15 @@ class MyMark(MySchema):
     def __init__(self, source: dict):
         super().__init__(source)
         
+        self.format_types = {
+            "Контрольное упражнение": "К/Упр",
+            "Самостоятельная работа": "С/Р",
+            "Практическая работа": "Пр/Р",
+            "Контрольная работа": "К/Р",
+            "Домашнее задание": "Д/З",
+            "Ответ на уроке": "Ответ",
+        }
+        
         self.id: int = source["id"]
         self.subject: str = source["subject"]
         self.date: _Date = source["date"]
@@ -394,8 +404,12 @@ class MyMark(MySchema):
     def __str__(self):
         templates = files.get_settings()["schemas"]
         
+        ftype = self.type[:]
+        if ftype in self.format_types.keys():
+            ftype = self.format_types[ftype]
+        
         res = templates["mark"].format(
-            self.type,
+            ftype,
             self.date,
             self.mark
         )
