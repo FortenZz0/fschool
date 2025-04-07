@@ -16,10 +16,15 @@ for f in router_dir:
     if _is_router(f.name):
         router_name = f.name.split(".")[0]
         
-        router = importlib.import_module(f"routers.{router_name}").router
-        routers.append(router)
+        router_lib = importlib.import_module(f"routers.{router_name}")
+        router = router_lib.router
+        router_active =  router_lib.ACTIVE
         
-        print(f"  \"{router_name}\" imported")
+        if router_active:
+            routers.append(router)
+            print(f"  \"{router_name}\" imported")
+        else:
+            print(f"  \"{router_name}\" NOT imported (disabled)")
 
 print("\n  All routers are imported\n")
 

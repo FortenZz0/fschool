@@ -17,6 +17,7 @@ from handlers.schemas import MyDiary
 
 
 router = Router(name=__name__)
+ACTIVE = True
 db = database.DB()
 
 

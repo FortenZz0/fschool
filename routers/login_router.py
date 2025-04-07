@@ -14,6 +14,7 @@ import asyncio
 
 
 router = Router(name=__name__)
+ACTIVE = True
 
 
 

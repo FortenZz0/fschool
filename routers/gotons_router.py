@@ -14,6 +14,7 @@ from .login_router import get_admin, get_user, start_login_handler
 
 
 router = Router(name=__name__)
+ACTIVE = True
 db = database.DB()
 
 

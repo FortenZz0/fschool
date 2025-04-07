@@ -13,6 +13,7 @@ from .login_router import start_login_handler
 
 
 router = Router(name=__name__)
+ACTIVE = True
 db = database.DB()
 
 

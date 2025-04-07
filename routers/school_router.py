@@ -13,6 +13,7 @@ from .login_router import ns_login
 
 
 router = Router(name=__name__)
+ACTIVE = True
 db = database.DB()
 
 

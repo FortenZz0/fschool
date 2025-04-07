@@ -11,6 +11,7 @@ from handlers.fsm import *
 
 
 router = Router(name=__name__)
+ACTIVE = False
 db = database.DB()
 
 

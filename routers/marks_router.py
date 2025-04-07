@@ -13,6 +13,7 @@ from routers.slider_router import create_slider
 
 
 router = Router(name=__name__)
+ACTIVE = True
 db = database.DB()
 
 
