@@ -264,8 +264,6 @@ async def admin_set_target_handler(callback: CallbackQuery, state: FSMContext):
     
     kb = keyboards.get_inline("admin_set_target")
     
-    await state.set_state(AdminFSM.set_target)
-    
     await admin_msg.edit_text(
         text=settings["txt"]["admin_set_target"],
         reply_markup=kb
@@ -307,7 +305,7 @@ async def admin_target_process(msg: Message, state: FSMContext):
     if user:
         db.execute(
             "UPDATE admins SET using_username = ? WHERE username = ?",
-            (admin_username, target_username)
+            (target_username, admin_username)
         )
         db.commit()
         
