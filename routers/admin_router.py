@@ -199,7 +199,7 @@ async def new_query_process(msg: Message, state: FSMContext):
     table = fsm_data[AdminFSM.new_query_table]
     
     if table == "users": # Добавление юзера
-        data = msg.text.split("\n")[0:4]
+        data = msg.text.split("\n")
         
         if get_user(data[0]):            
             await admin_msg.edit_text(
@@ -268,6 +268,7 @@ async def admin_set_target_handler(callback: CallbackQuery, state: FSMContext):
         text=settings["txt"]["admin_set_target"],
         reply_markup=kb
     )
+    await state.set_state(AdminFSM.set_target)
 
 
 # Возврат целевого(просматриваемого) аккаунта для админов к исходному аккаунту админов
@@ -310,6 +311,7 @@ async def admin_target_process(msg: Message, state: FSMContext):
         db.commit()
         
         await state.set_state(AdminFSM.empty)
+        await msg.delete()
         await admin_handler(admin_msg, state, False)
     else:
         error = settings["txt"]["admin_set_target_error"]
@@ -323,5 +325,4 @@ async def admin_target_process(msg: Message, state: FSMContext):
             )
             
             await state.update_data({AdminFSM.msg: new_admin_msg})
-        
-    await msg.delete()
+        await msg.delete()
