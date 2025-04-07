@@ -98,9 +98,11 @@ async def ns_login(url: str | None = None,
         admin = get_admin(tg_username)
         
         if admin:
-            tg_username = admin[1]
+            tg_us = admin[1]
+        else:
+            tg_us = tg_username[:]
         
-        data = get_user(tg_username)[1:-1]
+        data = get_user(tg_us)[1:-1]
         
     ns = NetSchoolAPI(data[0])
     
