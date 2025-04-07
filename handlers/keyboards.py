@@ -78,7 +78,8 @@ def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKe
             ]
         ],
         "gotons": [
-            [InlineKeyboardButton(text=btn["gotons"], url=data[0])]
+            [InlineKeyboardButton(text=btn["gotons"], url=data[0])],
+            [InlineKeyboardButton(text=btn["del_msg"], callback_data="gotons_del")]
         ]
     }
     

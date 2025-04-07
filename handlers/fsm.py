@@ -52,3 +52,7 @@ class SliderFSM(StatesGroup):
     wait_period = State() # wait period msg
     cache = State() # {period_n: str(obj)}
 
+
+class GotonsFSM(StatesGroup):
+    bot_msg = State() # bot msg
+    user_msg = State() # user msg

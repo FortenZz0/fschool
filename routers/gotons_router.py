@@ -1,5 +1,5 @@
 from aiogram import types, F, Router, html
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
@@ -18,7 +18,7 @@ db = database.DB()
 
 
 @router.message(F.text.lower() == files.get_settings()["buttons"]["reply"]["gotons"].lower())
-async def gotons_handler(msg: Message):
+async def gotons_handler(msg: Message, state: FSMContext):
     user = get_user(msg.from_user.username)
     
     settings = files.get_settings()
@@ -30,7 +30,7 @@ async def gotons_handler(msg: Message):
     
     url = settings["values"]["gotons_url_template"].format(user[1])
     
-    await msg.answer(
+    bot_msg = await msg.answer(
         txt["gotons_template"].format(
             user[4],
             user[2],
@@ -39,3 +39,20 @@ async def gotons_handler(msg: Message):
         ),
         reply_markup=keyboards.get_inline("gotons", data=[url])
     )
+    
+    await state.update_data({
+        GotonsFSM.bot_msg: bot_msg,
+        GotonsFSM.user_msg: msg
+    })
+    
+
+@router.callback_query(F.data.split(" ")[0] == "gotons_del")
+async def gotons_del_handler(callback: CallbackQuery, state: FSMContext):
+    fsm_data = await state.get_data()
+    
+    bot_msg = fsm_data[GotonsFSM.bot_msg]
+    user_msg = fsm_data[GotonsFSM.user_msg]
+    
+    await bot_msg.delete()
+    await user_msg.delete()
+    
