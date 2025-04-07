@@ -76,6 +76,9 @@ def get_inline(kb_type: str, data: Iterable = [], sub_str: str = "") -> InlineKe
                 InlineKeyboardButton(text=btn["day_period"], callback_data="period day"),
                 InlineKeyboardButton(text=btn["week_period"], callback_data="period week")
             ]
+        ],
+        "gotons": [
+            [InlineKeyboardButton(text=btn["gotons"], url=data[0])]
         ]
     }
     
@@ -97,6 +100,9 @@ def get_reply(kb_type: str, is_admin: bool) -> ReplyKeyboardMarkup:
                 KeyboardButton(text=btn["school"]),
                 KeyboardButton(text=btn["settings"])
             ],
+            [
+                KeyboardButton(text=btn["goto_netschool"])
+            ]
             # [
             #     KeyboardButton(text=btn["duty"]),
             #     KeyboardButton(text=btn["ads"])
@@ -106,8 +112,10 @@ def get_reply(kb_type: str, is_admin: bool) -> ReplyKeyboardMarkup:
     
     m = markups[kb_type]
     
+    # if is_admin and kb_type in ["main"]:
+    #     m.append([KeyboardButton(text=btn["admin"])])
     if is_admin and kb_type in ["main"]:
-        m.append([KeyboardButton(text=btn["admin"])])
+        m[-1].append(KeyboardButton(text=btn["admin"]))
     
     keyboard = ReplyKeyboardMarkup(
         keyboard=m,
