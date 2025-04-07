@@ -102,7 +102,7 @@ def get_reply(kb_type: str, is_admin: bool) -> ReplyKeyboardMarkup:
                 KeyboardButton(text=btn["settings"])
             ],
             [
-                KeyboardButton(text=btn["goto_netschool"])
+                KeyboardButton(text=btn["gotons"])
             ]
             # [
             #     KeyboardButton(text=btn["duty"]),
